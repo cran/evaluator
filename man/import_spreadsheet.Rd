@@ -5,7 +5,7 @@
 \title{Import the scenario spreadsheet.}
 \usage{
 import_spreadsheet(survey_file = system.file("survey", "survey.xlsx", package
-  = "evaluator"), domains = NULL, output_dir = file.path(getwd(), "data"))
+  = "evaluator"), domains = NULL, output_dir = "~/data")
 }
 \arguments{
 \item{survey_file}{Path to survey XLSX file. Defaults to a sample file if not supplied.}
@@ -20,6 +20,6 @@ Dataframe of generated files (capabilities.csv and scenarios.csv)
 }
 \description{
 This is a wrapper function around \code{import_scenarios} and
-\code{import_capabilities}, calling both functions and writting the dataframes
+\code{import_capabilities}, calling both functions and writing the dataframes
 to a location on disk.
 }

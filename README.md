@@ -17,7 +17,10 @@ David F. Severski
 -   [Contributing](#contributing)
 -   [License](#license)
 
-[![Build Status](https://travis-ci.org/davidski/evaluator.svg?branch=master)](https://travis-ci.org/davidski/evaluator) [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/evaluator)](https://cran.r-project.org/package=evaluator) ![downloads](http://cranlogs.r-pkg.org/badges/grand-total/evaluator)
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+[![Build Status](https://travis-ci.org/davidski/evaluator.svg?branch=master)](https://travis-ci.org/davidski/evaluator) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/davidski/evaluator?branch=master&svg=true)](https://ci.appveyor.com/project/davidski/evaluator) [![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/evaluator)](https://cran.r-project.org/package=evaluator) ![downloads](http://cranlogs.r-pkg.org/badges/grand-total/evaluator)
+
+> NOTE: This README is out of date with the MASTER (development) version of Evaluator. Running the dev version (via `devtools::install_github("davidski/evaluator")` is required for current R installation and highly suggested for a better experience. Please view the usage vignette (`vignette("usage")`) after installation for a walk through guide. Updates to this README are coming!
 
 Summary
 =======
@@ -64,9 +67,9 @@ Don't be intimidated by the process. Evaluator is with you at every step!
 
 ### Prepare the Environment
 
-A working [R interpreter](https://www.r-project.org/) is required. Evaluator should work on any current version of R (v3.3.2 as of this writing) and on any supported platform (Windows, MacOS, or Linux). If the `pacman` package is installed (`install.packages("pacman")`), Evaluator will auto-install any missing dependencies. This README assumes the use of [RStudio IDE](https://www.rstudio.com/), but it is not strictly required (advanced users may manually `knit` files if they so choose).
+A working [R interpreter](https://www.r-project.org/) is required. Evaluator should work on any current version of R (v3.3.2 as of this writing) and on any supported platform (Windows, MacOS, or Linux). This README assumes the use of [RStudio IDE](https://www.rstudio.com/), but it is not strictly required (advanced users may manually `knit` files if they so choose).
 
-Obtain the Evaluator toolkit by either cloning this repository (`git clone https://github.com/davidski/evaluator`) or downloading and extracting the ZIP file from [GitHub](https://github.com/davidski/evaluator/archive/master.zip).
+Obtain the Evaluator toolkit via `install.packages("evaluator")`. If you'd like to use the development version, you can install the GitHub version via `devtools::install_github("davidski/evaluator")`.
 
 ### Define Your Security Domains
 
@@ -100,10 +103,10 @@ For interactive exploration, open the `explore_scenarios.Rmd` file and click on 
 
 For more in depth analysis, the following data files may be used directly from R or from external programs such as Tableau:
 
-<table style="width:74%;">
+<table style="width:79%;">
 <colgroup>
-<col width="31%" />
-<col width="41%" />
+<col width="34%" />
+<col width="44%" />
 </colgroup>
 <thead>
 <tr class="header">

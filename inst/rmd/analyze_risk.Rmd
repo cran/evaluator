@@ -1,7 +1,6 @@
 ---
 title: "Strategic Information Security Risk Analysis"
 author: "Evaluator toolkit (https://github.com/davidski/evaluator)"
-mainfont: BentonSansRE
 output:
   html_document:
     css: styles/html-styles.css
@@ -32,8 +31,8 @@ header-includes:
 - \pagestyle{fancy}
 - \fancyfoot[C]{Sample - \thepage}
 params:
-  input_directory: "data"
-  results_directory: "results"
+  input_directory: "~/data"
+  results_directory: "~/results"
   focus_scenario_ids: !r c(51, 12)
 ---
 
@@ -50,7 +49,6 @@ library(scales)
 library(viridis)
 library(dplyr)
 library(purrr)
-library(magrittr)
 library(readr)
 library(psych)
 library(tidyr)
@@ -99,10 +97,10 @@ basefont <- get_base_fontfamily()
 
 ```{r enhance_summary_object}
 # assign loss tolerance to ALE VaR size
-scenario_summary %<>% 
-  mutate(annual_tolerance = ifelse(ale_var >= risk_tolerance["high"], 
-                                   "High", 
-                                   ifelse(ale_var >= risk_tolerance["medium"], "Medium", "Low"))) %>% 
+scenario_summary <-
+  mutate(scenario_summary, annual_tolerance = ifelse(ale_var >= risk_tolerance["high"], 
+                                                     "High", 
+                                                     ifelse(ale_var >= risk_tolerance["medium"], "Medium", "Low"))) %>% 
   mutate(annual_tolerance = factor(annual_tolerance, 
                                    levels = c("High", "Medium", "Low"), 
                                    ordered = TRUE)) 
@@ -167,7 +165,7 @@ outliers are included.
 ```{r loss_exceedance_curve, fig.cap="Loss Exceedance Curve"}
 max_loss %>% 
   group_by(outliers) %>% 
-  purrr::by_slice(~ arrange(.x, max_loss) %>% 
+  purrrlyr::by_slice(~ arrange(.x, max_loss) %>% 
              mutate(prob = 1 - percent_rank(max_loss)), .collate = "rows") %>% 
   ggplot(., aes(prob, max_loss, group=outliers)) -> gg
 gg <- gg + geom_path()
@@ -211,7 +209,7 @@ losses are `r domain_impact[[1, "domain"]]`, `r domain_impact[[2, "domain"]]`, a
 program are described in the following table.
 
 ```{r domain_impact, echo = FALSE}
-mutate_each(domain_impact, funs(dollar), -domain_id, -domain) %>% 
+mutate_at(domain_impact, vars(-one_of("domain_id", "domain")), funs(dollar)) %>% 
   select("Domain" = domain, 
          "Value at Risk" = var,
          "Maximum" = max, 
@@ -620,8 +618,8 @@ then re-summarized at the domain level.
 domain_loss_frequency <- simulation_results %>% group_by(domain_id, simulation) %>% 
   summarize(loss_events = sum(loss_events)) %>% 
   ungroup %>% 
-  purrr::slice_rows("domain_id") %>% 
-  purrr::by_slice(~ describe(.x$loss_events), .collate = "rows") %>% select(-vars)
+  purrrlyr::slice_rows("domain_id") %>% 
+  purrrlyr::by_slice(~ describe(.x$loss_events), .collate = "rows") %>% select(-vars)
 
 if (sum(domain_loss_frequency$skew <= 0, na.rm = TRUE) == 0) {
   narrative <- paste("All domains are skewed positively,",
@@ -641,8 +639,7 @@ select(domain_loss_frequency, -c(N, Trimmed, Mad, Se)) %>%
   purrr::map_if(is.numeric, ~ round(., digits = 2)) %>% 
   bind_cols %>% 
   rename(Domain = Domain_id) %>% 
-  pander(domain_loss_frequency, 
-       caption = "Loss Events by Domain, Summary Statistics") 
+  pander(caption = "Loss Events by Domain, Summary Statistics") 
 ```
 
 The following figure shows the kernel density of annualized loss events by 
@@ -984,7 +981,7 @@ arrange(scenarios, domain_id, scenario_id) %>%
 left_join(scenarios, scenario_summary, by = c("scenario_id" = "scenario_id",
                                             "domain_id" = "domain_id")) %>% 
   arrange(desc(ale_median), desc(ale_var)) %>% 
-  mutate_each(funs(dollar), ale_median, ale_var) %>% 
+  mutate_at(vars("ale_median", "ale_var"), funs(dollar)) %>% 
   mutate("Domain" = paste(domain_id, scenario_id, sep = " - ")) %>% 
   select(Domain,
          "Scenario" = scenario, 

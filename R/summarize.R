@@ -1,7 +1,6 @@
 #' Create scenario level summary of simulation results.
 #'
 #' @import dplyr
-#' @importFrom magrittr "%<>%"
 #' @param simulation_results Simulation results dataframe
 #' @export
 #' @return Simulation results summarized by scenario
@@ -28,10 +27,8 @@ summarize_scenarios <- function(simulation_results) {
   ungroup()
 
   # calculate z-score for ALE VaR and assign outliers as >= 2 SD
-  scenario_summary %<>% mutate_(ale_var_zscore = ~ scale(ale_var),
-                                outlier = ~ ale_var_zscore >= 2)
-
-  scenario_summary
+  mutate_(scenario_summary, ale_var_zscore = ~ scale(ale_var),
+          outlier = ~ ale_var_zscore >= 2)
 
 }
 
@@ -52,17 +49,17 @@ summarize_domains <- function(simulation_results, domains) {
 #' Create all summary files and write to disk.
 #'
 #' This is a wrapper function around \code{summarize_scenarios} and
-#' \code{summarize_domains}, calling both functions and writting the dataframes
+#' \code{summarize_domains}, calling both functions and writing the dataframes
 #' to a location on disk.
 #'
-#' @importFrom magrittr "%>%"
+#' @importFrom dplyr "%>%"
 #' @param simulation_results Simulation results dataframe
 #' @param domains Domain mappings dataframe
 #' @param results_dir Directory to place simulation files
 #' @export
 #' @return Simulation results summarized by domain
-summarize_all <- function(simulation_results, domains, results_dir =
-                            file.path(getwd(), "results")) {
+summarize_to_disk <- function(simulation_results, domains,
+                              results_dir = "~/results") {
   if (!dir.exists(results_dir)) dir.create(results_dir)
 
   scenario_summary <- summarize_scenarios(simulation_results)

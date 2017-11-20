@@ -1,11 +1,10 @@
 #' Import the scenario spreadsheet.
 #'
 #' This is a wrapper function around \code{import_scenarios} and
-#' \code{import_capabilities}, calling both functions and writting the dataframes
+#' \code{import_capabilities}, calling both functions and writing the dataframes
 #' to a location on disk.
 #'
 #' @import dplyr
-#' @importFrom magrittr "%<>%"
 #' @param survey_file Path to survey XLSX file. Defaults to a sample file if not supplied.
 #' @param domains Dataframe of domains and domain IDs. Defaults to built-in sample \code{domains} dataset.
 #' @param output_dir Output file directory. Defaults to a \code{data}
@@ -14,7 +13,7 @@
 #' @return Dataframe of generated files (capabilities.csv and scenarios.csv)
 import_spreadsheet <- function(survey_file = system.file("survey", "survey.xlsx", package = "evaluator"),
                                domains = NULL,
-                               output_dir = file.path(getwd(), "data")){
+                               output_dir = "~/data"){
 
   ## ----survey_sheet--------------------------------------------------------
   #message("Target file is ", survey_file)
@@ -43,7 +42,6 @@ import_spreadsheet <- function(survey_file = system.file("survey", "survey.xlsx"
 #' Import scenarios from survey spreadsheet.
 #'
 #' @import dplyr
-#' @importFrom magrittr "%<>%"
 #' @param survey_file Path to survey XLSX file. Defaults to a sample file if not supplied.
 #' @param domains Dataframe of domains and domain IDs. Defaults to built-in sample \code{domains} dataset.
 #' @export
@@ -78,7 +76,7 @@ import_scenarios <- function(survey_file = system.file("survey", "survey.xlsx", 
             controls = "Capabilities") %>%
     mutate_("scenario_id" = ~ as.integer(scenario_id)) %>% arrange_("scenario_id")
 
-  scenarios %<>% mutate_each_(funs(tolower), ~ c(tef, lm, tc)) # risk scenarios
+  scenarios <- mutate_at(scenarios, vars("tef", "lm", "tc"), funs(tolower)) # risk scenarios
 
   scenarios
 
@@ -87,7 +85,6 @@ import_scenarios <- function(survey_file = system.file("survey", "survey.xlsx", 
 #' Import capabilities from survey spreadsheet.
 #'
 #' @import dplyr
-#' @importFrom magrittr "%<>%"
 #' @param survey_file Path to survey XLSX file. Defaults to a sample file if not supplied.
 #' @param domains Dataframe of domains and domain IDs. Defaults to built-in sample \code{domains} dataset.
 #' @export
@@ -125,7 +122,6 @@ import_capabilities <- function(survey_file = system.file("survey", "survey.xlsx
 #' Split a sheet of the survey spreadsheet into capabilities or threats.
 #'
 #' @import dplyr
-#' @importFrom magrittr "%<>%"
 #' @param dat Raw sheet input from \code{readxl}.
 #' @param table_type Either \code{capabilities} or \code{threats}
 #' @return Extracted table as a data_Frame
@@ -145,7 +141,7 @@ split_sheet <- function(dat, table_type = "capabilities") {
         unique = TRUE,
         allow_ = TRUE
       )
-    capabilities_data %<>% select(matches("^[^X]"))
+    capabilities_data <- select(capabilities_data, matches("^[^X]"))
     capabilities_data
   } else {
     # generate threats_data

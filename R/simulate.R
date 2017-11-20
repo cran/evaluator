@@ -1,7 +1,6 @@
 #' Run simulations for all scenarios.
 #'
 #' @import dplyr
-#' @importFrom magrittr "%<>%"
 #' @param scenario Quantitative scenarios
 #' @param simulation_count Number of simulations for each scenario
 #' @export
@@ -14,7 +13,7 @@ run_simulations <- function(scenario, simulation_count = 10000L) {
                       label = "Working on scenario ",
                       min = 1, max = nrow(scenario), initial = 1)
 
-  simulation_results <- purrr::by_row(scenario, function(x) {
+  simulation_results <- purrrlyr::by_row(scenario, function(x) {
     #info <- sprintf("%d%% done", round(i))
     tcltk::setTkProgressBar(pb, x$scenario_id,
                      label = sprintf("Running scenario %s of %s",
@@ -42,17 +41,17 @@ run_simulations <- function(scenario, simulation_count = 10000L) {
 
   ## ----tidy_results--------------------------------------------------------
   # convert title back to scenario_id
-  simulation_results %<>% mutate_("title" = ~ as.integer(title)) %>%
+  simulation_results <- mutate_(simulation_results, "title" = ~ as.integer(title)) %>%
     rename_("scenario_id" = "title")
 
   # calculate the vuln percentage
   # note that for no threat events, we report a NA vuln value
-  simulation_results %<>% mutate_(vuln = ~ 1 - (threat_events - loss_events) /
+  simulation_results <- simulation_results %>% mutate_(vuln = ~ 1 - (threat_events - loss_events) /
                                     threat_events,
                                   vuln = ~ ifelse(vuln < 0, 0, vuln))
 
   # add the domain_id column
-  simulation_results %<>% left_join(select_(scenario, 'c(scenario_id, domain_id)'),
+  simulation_results <- simulation_results %>% left_join(select_(scenario, 'c(scenario_id, domain_id)'),
                                     by = c("scenario_id" = "scenario_id")) %>%
     select_("domain_id", "scenario_id", "simulation", "threat_events",
             "loss_events", "vuln", ~everything())

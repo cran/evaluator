@@ -71,7 +71,7 @@ generate_scatterplot <- function(simulation_results, scenario_id){
 #'
 #' @import dplyr
 #' @import ggplot2
-#' @param control_weakness Domain level control weakenss from \code{calculate_control_weakness}
+#' @param control_weakness Domain-level control weakness from \code{calculate_control_weakness}
 #' @return ggplot object
 #' @export
 generate_event_outcomes_plot <- function(control_weakness) {
@@ -82,10 +82,10 @@ generate_event_outcomes_plot <- function(control_weakness) {
     mutate_(contained_events = ~ threat_events - loss_events)
 
   # nudge labels 5% off from the end of the segment
-  label_nudge = c(max(dat$loss_events) / 20 * -1, max(dat$contained_events) / 20)
+  label_nudge <- c(max(dat$loss_events) / 20 * -1, max(dat$contained_events) / 20)
 
   # set breakpoints to half of the range
-  break_locations = c(max(dat$loss_events) / 2 * -1.5, max(dat$contained_events) / 2 * 1.5)
+  break_locations <-  c(max(dat$loss_events) / 2 * -1.5, max(dat$contained_events) / 2 * 1.5)
 
   # convert data into tidy-er format
   dat <- tidyr::gather_(dat, "type", "events", c("loss_events", "contained_events")) %>%
