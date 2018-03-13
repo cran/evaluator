@@ -2,7 +2,7 @@
 % Please edit documentation in R/report.R
 \name{openfair_example}
 \alias{openfair_example}
-\title{Launch OpenFAIR demonstration web application.}
+\title{Launch OpenFAIR demonstration web application}
 \usage{
 openfair_example()
 }
@@ -10,5 +10,13 @@ openfair_example()
 Invisible NULL
 }
 \description{
-Launch OpenFAIR demonstration web application.
+A simple web application to demonstrate OpenFAIR modeling. This application
+allows a user to enter beta PERT parameters and run simulations to see the
+distribution of results, with high level summary statistics. As a demonstration
+application, only TEF+TC+DIFF+LM parameters may be entered.
+}
+\examples{
+\dontrun{
+openfair_example()
+}
 }

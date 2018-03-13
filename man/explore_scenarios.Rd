@@ -2,18 +2,33 @@
 % Please edit documentation in R/report.R
 \name{explore_scenarios}
 \alias{explore_scenarios}
-\title{Launch the Scenario Explorer web application.}
+\title{Launch the Scenario Explorer web application}
 \usage{
-explore_scenarios(input_directory = "data", results_directory = "results")
+explore_scenarios(input_directory = "~/evaluator/inputs",
+  results_directory = "~/evaluator/results", styles = NULL, ...)
 }
 \arguments{
-\item{input_directory}{Location of input files}
+\item{input_directory}{Location of input files.}
 
-\item{results_directory}{Location of simulation results}
+\item{results_directory}{Location of simulation results.}
+
+\item{styles}{Optional full path to CSS file to override default styles.}
+
+\item{...}{Any other parameters to pass straight to \code{rmarkdown::run}.}
 }
 \value{
-Invisible NULL
+Invisible NULL.
 }
 \description{
-Launch the Scenario Explorer web application.
+Evaluator provides a simple Shiny-based web application for interactive
+exploration of simulation results. This allows a user to interactively
+review simulation output without generating an extensive report. For users
+comfortable with R, working directly with the result dataframes will usually
+be preferable, with the Explorer application provided as a bare-bones data
+exploration tool.
+}
+\examples{
+\dontrun{
+explore_scenarios("~/inputs", "~/results")
+}
 }

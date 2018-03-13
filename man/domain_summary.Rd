@@ -4,7 +4,7 @@
 \name{domain_summary}
 \alias{domain_summary}
 \title{Domain-level risk summary}
-\format{An object of class \code{grouped_df} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 140000 rows and 4 columns.}
+\format{An object of class \code{grouped_df} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 14000 rows and 4 columns.}
 \usage{
 domain_summary
 }
@@ -14,10 +14,10 @@ domain level.
 }
 \details{
 \describe{
-  \item{ale}{annual loss expected, in US dollars}
-  \item{domain}{full title of the domain}
-  \item{domain_id}{abbreviated name of the domain}
-  \item{simulation}{simulation id number}
+\item{domain_id}{abbreviated name of the domain}
+\item{domain}{full title of the domain}
+\item{ale}{annual loss expected, in US dollars}
+\item{simulation}{simulation id number}
 }
 }
 \keyword{datasets}

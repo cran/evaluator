@@ -2,18 +2,26 @@
 % Please edit documentation in R/utils.R
 \name{calculate_domain_impact}
 \alias{calculate_domain_impact}
-\title{Calculate quantified impact at a domain level.}
+\title{Calculate quantified impact at a domain level}
 \usage{
 calculate_domain_impact(domain_summary, domains)
 }
 \arguments{
-\item{domain_summary}{Data.}
+\item{domain_summary}{Domain-level summary of simulation results as returned by \code{\link{summarize_domains}}.}
 
-\item{domains}{Data.}
+\item{domains}{Dataframe of all domains in scope.}
 }
 \value{
-Dataframe
+Dataframe.
 }
 \description{
-Calculate quantified impact at a domain level.
+Given a dataframe of simulation results summarized at the domain level,
+create a summarization of the annual loss expected (ALE) with descriptors
+at the minimum, mean, maximum, standard deviation, and 95% value at risk
+levels.
+}
+\examples{
+data(domain_summary)
+data(domains)
+calculate_domain_impact(domain_summary, domains)
 }

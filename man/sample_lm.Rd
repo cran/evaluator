@@ -4,22 +4,25 @@
 \alias{sample_lm}
 \title{Given a number of loss events and a loss distribution, calculate losses}
 \usage{
-sample_lm(n, l, ml, h, conf)
+sample_lm(func = NULL, params = NULL)
 }
 \arguments{
-\item{n}{Numer of loss events to evaluate}
+\item{func}{Function to use to simulate TEF, defaults to \code{\link[mc2d]{rpert}}.}
 
-\item{l}{Low boundary}
-
-\item{ml}{Most likely}
-
-\item{h}{High boundary}
-
-\item{conf}{Confidence}
+\item{params}{Optional parameters to pass to \code{func}.}
 }
 \value{
-List of total loss, min/max/mean/median of sle
+List containing type ("lm"), samples (as a vector), and details (as a list).
 }
 \description{
 Given a number of loss events and a loss distribution, calculate losses
+}
+\seealso{
+Other OpenFAIR helpers: \code{\link{compare_tef_vuln}},
+  \code{\link{get_mean_control_strength}},
+  \code{\link{openfair_tef_tc_diff_lm}},
+  \code{\link{sample_diff}}, \code{\link{sample_lef}},
+  \code{\link{sample_tc}}, \code{\link{sample_tef}},
+  \code{\link{sample_vuln}},
+  \code{\link{select_loss_opportunities}}
 }

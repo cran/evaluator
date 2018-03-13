@@ -1,34 +1,60 @@
-#' Determine fonts we can/should use.
+#' Select a base graphics font family
 #'
+#' The Benton Sans Regular font is preferred with a fallback of Arial Narrow.
+#' If neither font is available, use a default `sans` family font.
+#'
+#' @importFrom extrafont choose_font
 #' @return String of the preferred base font
 #' @export
+#' @examples
+#' get_base_fontfamily()
 get_base_fontfamily <- function() {
-  extrafont::choose_font(c("BentonSansRE", "Arial Narrow"))
+  dat <- extrafont::choose_font(c("BentonSansRE", "Arial Narrow"))
+  if (dat == "") {
+    "sans"
+  } else {
+    dat
+  }
 }
 
-#' Default ggplot theme used by all Evaluator-supplied graphics.
+#' Default ggplot theme used by all Evaluator-supplied graphics
 #'
-#' @importFrom ggplot2 theme_minimal
-#' @param base_family Font family
-#' @return ggplot theme object
+#' Returns a standardized ggplot theme used by all built-in Evaluator plots.
+#'
+#' @importFrom ggplot2 theme_minimal theme %+replace% element_text element_blank
+#' @param base_family Font family.
+#' @return A ggplot theme object.
 #' @export
+#' @examples
+#' library(ggplot2)
+#' p <- ggplot(mtcars) + geom_point(aes(wt, mpg, color = factor(gear))) + facet_wrap(~am)
+#' font_family <- get_base_fontfamily()
+#' p + theme_evaluator(font_family)
 theme_evaluator <- function(base_family = "BentonSansRE") {
   theme_minimal(base_family = base_family) %+replace%
     theme(panel.border = element_blank(), legend.position = "bottom",
           plot.caption = element_text(size = 9, hjust = 1))
 }
 
-#' Display a heatmap of impact by domain.
+#' Display a heatmap of impact by domain
 #'
-#' @import dplyr
+#' Given a domain_summary and a list of all domains, generate a heatmap colored
+#' by the 95% VaR. This plot displays the domains in which aggregreate risk is
+#' greater than others.
+#'
+#' @importFrom dplyr arrange_ mutate_
 #' @import ggplot2
-#' @param domain_impact Domain impact information from \code{calculate_domain_impact}
-#' @return ggplot object
+#' @importFrom viridis scale_fill_viridis
+#' @param domain_impact Domain impact information from \code{calculate_domain_impact}.
+#' @return A ggplot object.
 #' @export
-generate_heatmap <- function(domain_impact){
-  dat <- domain_impact %>% arrange_("domain_id") %>%
-    mutate_("full_label" = ~ paste0(domain_id, "\n", "$", round(var/10^6), "M"),
-            aux = ~ seq(1, 2 * nrow(.), by = 2))
+#' @examples
+#' dat <- calculate_domain_impact(domain_summary, domains)
+#' generate_heatmap(dat)
+generate_heatmap <- function(domain_impact) {
+  dat <- domain_impact %>% dplyr::arrange_("domain_id") %>%
+    dplyr::mutate_("full_label" = ~ paste0(domain_id, "\n", "$", round(var/10^6), "M"),
+                   aux = ~ seq(1, 2 * nrow(.), by = 2))
   gg <- ggplot(dat, aes_(x = quote(aux), y = 1))
   gg <- gg + geom_tile(stat = "identity", color = "white",
                        aes_(fill = quote(var)), width = 1)
@@ -44,13 +70,22 @@ generate_heatmap <- function(domain_impact){
   gg
 }
 
-#' Display a scatterplot for a particular scenario ID.
+#' Display a scatterplot for a particular scenario ID
+#'
+#' Given a detailed results dataframe and a specific scenario identifier,
+#' create a scatterplot of the number of loss events versus the annual loss
+#' expected. This provides a detailed view on the results for a particular
+#' scenario.
 #'
 #' @import ggplot2
-#' @param simulation_results Simulation results
-#' @param scenario_id ID of the scenario to display
-#' @return ggplot object
+#' @importFrom scales comma
+#' @param simulation_results Simulation results from \code{run_simulations}.
+#' @param scenario_id ID of the scenario to display.
+#' @return A ggplot object.
 #' @export
+#' @examples
+#' data(simulation_results)
+#' generate_scatterplot(simulation_results, scenario_id = 50)
 generate_scatterplot <- function(simulation_results, scenario_id){
   dat <- simulation_results[simulation_results$scenario_id == scenario_id, ]
 
@@ -67,19 +102,32 @@ generate_scatterplot <- function(simulation_results, scenario_id){
   gg
 }
 
-#' Display a scatterplot for a particular scenario ID.
+#' Display the distribution of threat events contained vs. realized across
+#' all domains
 #'
-#' @import dplyr
+#' Creates a barbell plot showing the number and percentage of events
+#' contained (not resulting in loss) vs the number and percentage of
+#' loss events (threat events resulting in losses).
+#'
+#' @importFrom dplyr arrange_ mutate_
 #' @import ggplot2
-#' @param control_weakness Domain-level control weakness from \code{calculate_control_weakness}
+#' @importFrom scales comma
+#' @importFrom viridis viridis
+#' @importFrom tidyr gather
+#' @param control_weakness Domain-level control weakness from \code{calculate_weak_domains}
 #' @return ggplot object
 #' @export
+#' @examples
+#' data(simulation_results)
+#' data(domains)
+#' dat <- calculate_weak_domains(simulation_results, domains)
+#' generate_event_outcomes_plot(dat)
 generate_event_outcomes_plot <- function(control_weakness) {
   dat <- control_weakness %>%
-    arrange_("desc(loss_events)", "desc(threat_events)") %>%
-    mutate_(domain_id = ~ factor(domain_id, levels = rev(unique(domain_id)),
-                              ordered = TRUE)) %>%
-    mutate_(contained_events = ~ threat_events - loss_events)
+    dplyr::arrange_("desc(loss_events)", "desc(threat_events)") %>%
+    dplyr::mutate_(domain_id = ~ factor(domain_id, levels = rev(unique(domain_id)),
+                                        ordered = TRUE)) %>%
+    dplyr::mutate_(contained_events = ~ threat_events - loss_events)
 
   # nudge labels 5% off from the end of the segment
   label_nudge <- c(max(dat$loss_events) / 20 * -1, max(dat$contained_events) / 20)
@@ -89,14 +137,14 @@ generate_event_outcomes_plot <- function(control_weakness) {
 
   # convert data into tidy-er format
   dat <- tidyr::gather_(dat, "type", "events", c("loss_events", "contained_events")) %>%
-    mutate_(actual_events = "events",
-           events = ~ events + 25000,
-           events = ~ ifelse(type == "loss_events", -1 * events, events)) %>%
-    mutate_("nudge" = ~ ifelse(type == "loss_events", label_nudge[1], label_nudge[2])) %>%
-    mutate_("hjust" = ~ ifelse(type == "loss_events", "right", "left")) %>%
-    mutate_("full_lab" = ~ ifelse(type == "loss_events",
-                             sprintf("%s (%s)", comma(actual_events), tc_exceedance),
-                             sprintf("%s (%s)", comma(actual_events), diff_exceedance)))
+    dplyr::mutate_(actual_events = "events",
+                   events = ~ events + 25000,
+                   events = ~ ifelse(type == "loss_events", -1 * events, events)) %>%
+    dplyr::mutate_("nudge" = ~ ifelse(type == "loss_events", label_nudge[1], label_nudge[2])) %>%
+    dplyr::mutate_("hjust" = ~ ifelse(type == "loss_events", "right", "left")) %>%
+    dplyr::mutate_("full_lab" = ~ ifelse(type == "loss_events",
+                                         sprintf("%s (%s)", scales::comma(actual_events), tc_exceedance),
+                                         sprintf("%s (%s)", scales::comma(actual_events), diff_exceedance)))
 
   # auto-calculate the limits of the plot
   event_range <- range(dat$events) * c(1.4, 1.5)
@@ -107,8 +155,7 @@ generate_event_outcomes_plot <- function(control_weakness) {
   gg <- gg + geom_point(color = viridis::viridis(1), size = 2)
   gg <- gg + geom_label(aes_(label = ~full_lab, x = ~events + nudge,
                              y = ~domain_id, hjust = ~hjust),
-                        family = "Arial Narrow", size = 3,
-                        label.size = NA)
+                        size = 3, label.size = NA)
   gg <- gg + geom_label(aes_(x = 0, y = ~domain_id, label = ~domain_id),
                         size = 3, label.size = NA)
   gg <- gg + scale_x_continuous(breaks = c(break_locations[1], 0, break_locations[2]),

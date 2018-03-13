@@ -2,25 +2,44 @@
 % Please edit documentation in R/report.R
 \name{generate_report}
 \alias{generate_report}
-\title{Generate sample analysis report.}
+\title{Generate sample analysis report}
 \usage{
-generate_report(input_directory = "~/data", results_directory = "~/results",
-  output_file = "risk_report.html", focus_scenario_ids = c(51, 12), ...)
+generate_report(input_directory = "~/evaluator/inputs",
+  results_directory = "~/evaluator/results", output_file, styles = NULL,
+  focus_scenario_ids = c(51, 12), format = "html", ...)
 }
 \arguments{
-\item{input_directory}{Location of input files}
+\item{input_directory}{Location of input files.}
 
-\item{results_directory}{Location of simulation results}
+\item{results_directory}{Location of simulation results.}
 
-\item{output_file}{Name of the output file to generate}
+\item{output_file}{Full path to output file.}
 
-\item{focus_scenario_ids}{IDs of scenarios of special interest}
+\item{styles}{Optional full path to CSS file to override default styles.}
 
-\item{...}{Any other parameters to pass straight to \code{rmarkdown::render}}
+\item{focus_scenario_ids}{IDs of scenarios of special interest.}
+
+\item{format}{Format to generate (html, pdf, word).}
+
+\item{...}{Any other parameters to pass straight to \code{rmarkdown::render}.}
 }
 \value{
 Default return values of the \code{rmarkdown::render} function.
 }
 \description{
-Generate sample analysis report.
+Given a set of input files and summarized simulation results, create a
+skeleton risk analysis report. This report attempts to summarize the results
+of the analysis at a top level, using 95% Value at Risk (VaR) as the primary
+metric, while also providing more detailed analysis at both a per-domain and
+per-scenario level.
+}
+\details{
+This report includes several sections where an analyst will need to modify and
+fill in details for their specific organization. Of particular note is the
+Recommendations section, which will always need to be updated.
+}
+\examples{
+\dontrun{
+generate_report("~/inputs", "~/results", "~/risk_report.html")
+}
 }

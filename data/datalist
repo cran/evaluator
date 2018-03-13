@@ -1,5 +1,8 @@
+capabilities
 domain_summary
 domains
+mappings
+qualitative_scenarios
 quantitative_scenarios
 scenario_summary
 simulation_results

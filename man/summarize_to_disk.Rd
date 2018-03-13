@@ -2,22 +2,29 @@
 % Please edit documentation in R/summarize.R
 \name{summarize_to_disk}
 \alias{summarize_to_disk}
-\title{Create all summary files and write to disk.}
+\title{Create all summary files and write to disk}
 \usage{
 summarize_to_disk(simulation_results, domains, results_dir = "~/results")
 }
 \arguments{
-\item{simulation_results}{Simulation results dataframe}
+\item{simulation_results}{Simulation results dataframe.}
 
-\item{domains}{Domain mappings dataframe}
+\item{domains}{Domain mappings dataframe.}
 
-\item{results_dir}{Directory to place simulation files}
+\item{results_dir}{Directory to place simulation files.}
 }
 \value{
-Simulation results summarized by domain
+Tibble with paths to the created data files.
 }
 \description{
-This is a wrapper function around \code{summarize_scenarios} and
-\code{summarize_domains}, calling both functions and writing the dataframes
-to a location on disk.
+This is a wrapper around \code{\link{summarize_scenarios}} and
+\code{\link{summarize_domains}}, calling both functions and writing the
+dataframes to a location on disk.
+}
+\examples{
+\dontrun{
+data(simulation_results)
+data(domains)
+summarize_to_disk(simulation_results, domains)
+}
 }

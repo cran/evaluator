@@ -1,35 +1,48 @@
-#' Run simulations for all scenarios.
+#' Run simulations for all scenarios
+#'
+#' Given a dataframe of quantitative scenarios, run an OpenFAIR Monte
+#' Carlo simulation for each scenario, returning a combined dataframe of all
+#' results.
 #'
 #' @import dplyr
-#' @param scenario Quantitative scenarios
-#' @param simulation_count Number of simulations for each scenario
+#' @importFrom dplyr progress_estimated bind_rows %>% mutate row_number
+#' @importFrom purrr safely is_null map_lgl transpose simplify
+#' @importFrom tidyr nest
+#' @param scenario Quantitative scenarios.
+#' @param model OpenFAIR model to use.
+#' @param simulation_count Number of simulations for each scenario.
+#' @param verbose Whether verbose console output is requested.
 #' @export
-#' @return Dataframe of raw results
-run_simulations <- function(scenario, simulation_count = 10000L) {
+#' @return Dataframe of raw results.
+#' @examples
+#' data(quantitative_scenarios)
+#' # run a single scenario in a trivial number (10) of trials
+#' run_simulations(quantitative_scenarios[1, ], 10)
+run_simulations <- function(scenario, simulation_count = 10000L,
+                            model = "openfair_tef_tc_diff_lm", verbose = FALSE) {
 
-
+  #model <- rlang::sym(model) # convert characters to symbol
   ## ----run_simulations-----------------------------------------------------
-  pb <- tcltk::tkProgressBar(title = "Evaluator simulations",
-                      label = "Working on scenario ",
-                      min = 1, max = nrow(scenario), initial = 1)
+  wrapped_calc <- function(x, .pb = NULL) {
+    if ((!is.null(.pb)) & inherits(.pb, "Progress") && (.pb$i < .pb$n)) .pb$tick()$print()
 
-  simulation_results <- purrrlyr::by_row(scenario, function(x) {
-    #info <- sprintf("%d%% done", round(i))
-    tcltk::setTkProgressBar(pb, x$scenario_id,
-                     label = sprintf("Running scenario %s of %s",
-                                     x$scenario_id, nrow(scenario)))
-    safe_calculate <- purrr::safely(calculate_ale)
+    safe_calculate <- purrr::safely(eval(as.name(model)))
     safe_calculate(scenario = x,
                   diff_estimates = x[[1, "diff_params"]],
                   n = simulation_count,
                   title = x$scenario_id,
-                  verbose = FALSE)},
-    .labels = FALSE
-  )
+                  verbose = verbose)
+    }
 
-  close(pb)
+  pb <- dplyr::progress_estimated(nrow(scenario))
+  dat <- scenario %>% dplyr::mutate(id = row_number()) %>% tidyr::nest(-id)
+  pb$print()
+  simulation_results <- dat$data %>% map(~ wrapped_calc(.x, .pb = pb))
 
-  y <- simulation_results$`.out` %>% purrr::transpose()
+  #simulation_results <- purrrlyr::by_row(scenario, wrapped_calc, .pb = pb, .labels = FALSE)
+  #y <- simulation_results$`.out` %>% purrr::transpose()
+
+  y <- simulation_results %>% purrr::transpose() %>% purrr::simplify()
   is_ok <- y$error %>% purrr::map_lgl(purrr::is_null)
 
   if (sum(is_ok) != nrow(scenario)) {
@@ -37,22 +50,18 @@ run_simulations <- function(scenario, simulation_count = 10000L) {
          paste0(scenario[!is_ok,]$scenario_id, collapse = ", "))
   }
 
-  simulation_results <- bind_rows(y$result)
+  simulation_results <- dplyr::bind_rows(y$result)
 
   ## ----tidy_results--------------------------------------------------------
   # convert title back to scenario_id
-  simulation_results <- mutate_(simulation_results, "title" = ~ as.integer(title)) %>%
+  simulation_results <- mutate_(simulation_results,
+                                "title" = ~ as.integer(title)) %>%
     rename_("scenario_id" = "title")
 
-  # calculate the vuln percentage
-  # note that for no threat events, we report a NA vuln value
-  simulation_results <- simulation_results %>% mutate_(vuln = ~ 1 - (threat_events - loss_events) /
-                                    threat_events,
-                                  vuln = ~ ifelse(vuln < 0, 0, vuln))
-
   # add the domain_id column
-  simulation_results <- simulation_results %>% left_join(select_(scenario, 'c(scenario_id, domain_id)'),
-                                    by = c("scenario_id" = "scenario_id")) %>%
+  simulation_results <- simulation_results %>%
+    left_join(select_(scenario, 'c(scenario_id, domain_id)'),
+              by = c("scenario_id" = "scenario_id")) %>%
     select_("domain_id", "scenario_id", "simulation", "threat_events",
             "loss_events", "vuln", ~everything())
 

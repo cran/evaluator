@@ -2,18 +2,25 @@
 % Please edit documentation in R/common_graphs.R
 \name{generate_scatterplot}
 \alias{generate_scatterplot}
-\title{Display a scatterplot for a particular scenario ID.}
+\title{Display a scatterplot for a particular scenario ID}
 \usage{
 generate_scatterplot(simulation_results, scenario_id)
 }
 \arguments{
-\item{simulation_results}{Simulation results}
+\item{simulation_results}{Simulation results from \code{run_simulations}.}
 
-\item{scenario_id}{ID of the scenario to display}
+\item{scenario_id}{ID of the scenario to display.}
 }
 \value{
-ggplot object
+A ggplot object.
 }
 \description{
-Display a scatterplot for a particular scenario ID.
+Given a detailed results dataframe and a specific scenario identifier,
+create a scatterplot of the number of loss events versus the annual loss
+expected. This provides a detailed view on the results for a particular
+scenario.
+}
+\examples{
+data(simulation_results)
+generate_scatterplot(simulation_results, scenario_id = 50)
 }

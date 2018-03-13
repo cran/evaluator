@@ -2,19 +2,23 @@
 % Please edit documentation in R/import.R
 \name{import_capabilities}
 \alias{import_capabilities}
-\title{Import capabilities from survey spreadsheet.}
+\title{Import capabilities from survey spreadsheet}
 \usage{
 import_capabilities(survey_file = system.file("survey", "survey.xlsx", package
-  = "evaluator"), domains = NULL)
+  = "evaluator"), domains)
 }
 \arguments{
-\item{survey_file}{Path to survey XLSX file. Defaults to a sample file if not supplied.}
+\item{survey_file}{Path to survey XLSX file. If not supplied, a default sample file is used.}
 
-\item{domains}{Dataframe of domains and domain IDs. Defaults to built-in sample \code{domains} dataset.}
+\item{domains}{Dataframe of domains and domain IDs.}
 }
 \value{
 Extracted capabilities as a dataframe.
 }
 \description{
-Import capabilities from survey spreadsheet.
+Import capabilities from survey spreadsheet
+}
+\examples{
+data(domains)
+import_capabilities(domains = domains)
 }

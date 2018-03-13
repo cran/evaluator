@@ -4,16 +4,23 @@
 \alias{load_data}
 \title{Load input and results files}
 \usage{
-load_data(input_directory = "~/data", results_directory = "~/data")
+load_data(input_directory = "~/evaluator/inputs",
+  results_directory = "~/evaluator/results")
 }
 \arguments{
-\item{input_directory}{Location of input files}
+\item{input_directory}{Location of input files.}
 
-\item{results_directory}{Location of simulation results}
+\item{results_directory}{Location of simulation results.}
 }
 \value{
-List of data objects
+List of all key data objects.
 }
 \description{
-Load input and results files
+Given a input directory and a directory of simulation results, load all
+of the key Evaluator data objects into memory.
+}
+\examples{
+\dontrun{
+load_data("~/evaluator/inputs", "~/evaluator/results")
+}
 }

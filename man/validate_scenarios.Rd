@@ -2,22 +2,38 @@
 % Please edit documentation in R/validate.R
 \name{validate_scenarios}
 \alias{validate_scenarios}
-\title{Validate scenario data.}
+\title{Validate qualitative scenario data}
 \usage{
 validate_scenarios(scenarios, capabilities, domains, mappings)
 }
 \arguments{
-\item{scenarios}{Dataframe of scenarios}
+\item{scenarios}{Dataframe of qualitative scenarios.}
 
-\item{capabilities}{Dataframe of capabilities}
+\item{capabilities}{Dataframe of capabilities.}
 
-\item{domains}{Dataframe of domain mappings}
+\item{domains}{Dataframe of domain mappings.}
 
-\item{mappings}{Dataframe of qualitative mappings}
+\item{mappings}{Dataframe of qualitative to quantitative mappings.}
 }
 \value{
-Invisible NULL.
+A invisible boolean as to success/failure of validation steps.
 }
 \description{
-Validate scenario data.
+Run a set of basic consistency checks on the key qualitative data inputs
+(scenarios, capabilities, domains, and mappings).
+}
+\details{
+Checks that:
+\itemize{
+\item All scenarios IDs are consecutive
+\item All scenarios are distinct
+\item There are no gaps in control IDs
+\item All controls referenced in scenarios are defined in the controls table
+\item All controls are distinct
+}
+}
+\examples{
+\dontrun{
+validate_scenarios(scenarios, capabilities, domains, mappings)
+}
 }

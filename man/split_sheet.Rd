@@ -2,18 +2,22 @@
 % Please edit documentation in R/import.R
 \name{split_sheet}
 \alias{split_sheet}
-\title{Split a sheet of the survey spreadsheet into capabilities or threats.}
+\title{Split a sheet of the survey spreadsheet into either capabilities or threats}
 \usage{
 split_sheet(dat, table_type = "capabilities")
 }
 \arguments{
-\item{dat}{Raw sheet input from \code{readxl}.}
+\item{dat}{Raw sheet input from \code{\link[readxl]{readxl}}.}
 
 \item{table_type}{Either \code{capabilities} or \code{threats}}
 }
 \value{
-Extracted table as a data_Frame
+Extracted table as a dataframe
 }
 \description{
-Split a sheet of the survey spreadsheet into capabilities or threats.
+The default data collection Excel spreadsheet solicits threat
+scenarios and applicable controls for each domain. This function
+takes a single sheet from the spreadsheet, as read by \code{\link[readxl]{readxl}}
+and pulls out either the capabilities or threats, as directed by the
+user.
 }
