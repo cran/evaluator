@@ -1,6 +1,6 @@
 Package: evaluator
 Title: Quantified Risk Assessment Toolkit
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: person("David", "Severski", email = "davidski@deadheaven.com", role = c("aut", "cre"))
 Description: An open source risk analysis toolkit based on the OpenFAIR taxonomy 
   <https://www2.opengroup.org/ogsys/catalog/C13K> and risk assessment standard 
@@ -16,12 +16,13 @@ RoxygenNote: 6.0.1
 Suggests: DT, pander (>= 0.6.1), psych, ggalt (>= 0.4.0), flexdashboard
         (>= 0.4), forcats, statip, knitr, purrrlyr, rmarkdown (>= 1.9),
         shiny, testthat, covr, mockery
+SystemRequirements: pandoc
 VignetteBuilder: knitr
 URL: https://evaluator.severski.net
 BugReports: https://github.com/davidski/evaluator/issues
 NeedsCompilation: no
-Packaged: 2018-03-13 18:51:35 UTC; dseversk
+Packaged: 2018-03-22 15:07:31 UTC; dseversk
 Author: David Severski [aut, cre]
 Maintainer: David Severski <davidski@deadheaven.com>
 Repository: CRAN
-Date/Publication: 2018-03-13 19:01:34 UTC
+Date/Publication: 2018-03-22 15:18:40 UTC
