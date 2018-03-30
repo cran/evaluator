@@ -1,3 +1,23 @@
+# evaluator 0.2.2
+
+## Analysis Change
+* Previous versions sampled threat frequency (TEF) as a continuous distribution.
+    Threat event counts are discrete (they either happen or don't in a given 
+    simulated period), so this previous method was incorrect and inflated threat 
+    counts. The differences are small in the standard 10,000 evaluation range, 
+    but users should note the change.
+* Part of the discretization step for TEF has a positive side effect of making 
+    the threat_event column in data objects an integer rather than a double-
+    long. As this is still a numeric type, there should be no impact on 
+    users for this change apart from a slightly tidyer data output.
+
+## Bug Fixes
+* Update risk_dashboard to not cache any chunks. This keeps `render` from 
+    from trying to write to the package install directory.
+* Updated tests to use four significant digits where long refrence values are 
+    passed, avoiding precission issues on machines without long doubles.
+
+
 # evaluator 0.2.1
 
 ## Bug Fixes

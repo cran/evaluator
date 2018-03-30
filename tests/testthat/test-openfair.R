@@ -7,12 +7,11 @@ test_that("Sample TEF", {
   expect_equal(names(tef), c("type", "samples", "details"))
   # ensure that the samples matches the number requested
   expect_equal(length(tef$samples), 10)
+  # ensure that TEF values are returned as integers
+  expect_is(tef$samples, "integer")
   # ensure that values of samples is correct
-  expect_equal(unlist(tef$samples), c(6.58476034295649, 30.043491618616,
-                                      1.78473018566469, 34.1131016153908,
-                                      36.3088944002633, 13.3732140003123,
-                                      13.7715514319784, 13.5179511213919,
-                                      9.49877054112384, 14.7953439798899))
+  expect_equal(unlist(tef$samples),
+               c(7, 30, 2, 34, 36, 13, 14, 14, 9, 15))
 })
 
 context("Sample DIFF")
@@ -25,14 +24,15 @@ test_that("Sample DIFF", {
   # ensure that the samples matches the number requested
   expect_equal(length(dat$samples), 10)
   # ensure that values of samples is correct
-  expect_equal(unlist(dat$samples), c(72.5519454551502, 65.1852603020272,
-                                      59.1564180836877, 74.5816023178688,
-                                      64.1192226440207, 63.561355776164,
-                                      70.1284833577168, 69.9960887031119,
-                                      70.0802721600923, 71.4683219144408))
+  expect_equal(signif(unlist(dat$samples), digits = 4),
+               signif(c(72.5519454551502, 65.1852603020272, 59.1564180836877,
+                        74.5816023178688, 64.1192226440207, 63.561355776164,
+                        70.1284833577168, 69.9960887031119, 70.0802721600923,
+                        71.4683219144408), digits = 4))
 })
 test_that("Multi control diff works", {
-  diff_estimates <- data_frame(l=c(1, 2), ml=c(10, 15), h=c(20, 100), conf=c(1, 3))
+  diff_estimates <- data_frame(l = c(1, 2), ml = c(10, 15), h = c(20, 100),
+                               conf = c(1, 3))
 })
 
 context("Sample TC")
@@ -45,11 +45,11 @@ test_that("Sample TC", {
   # ensure that the samples matches the number requested
   expect_equal(length(tc$samples), 10)
   # ensure that values of samples is correct
-  expect_equal(unlist(tc$samples), c(61.7026564773373, 78.188740471894,
-                                     87.0623477417219, 53.1987199785052,
-                                     79.9184628308895, 80.7889924652588,
-                                     68.4387021948896, 68.7541469869603,
-                                     68.554057026653, 64.9764652390671))
+  expect_equal(signif(unlist(tc$samples), digits = 4),
+               signif(c(61.7026564773373, 78.188740471894, 87.0623477417219,
+                        53.1987199785052, 79.9184628308895, 80.7889924652588,
+                        68.4387021948896, 68.7541469869603, 68.554057026653,
+                        64.9764652390671), digits = 4))
 })
 
 context("Sample VULN")
@@ -86,17 +86,17 @@ context("Sample LM")
 test_that("Sample LM", {
   set.seed(1234)
   lm <- sample_lm(params = list(10, 1*10^4, 5*10^4, 1*10^7, 3))
-  expect_that(lm, is_a("list"))
+  expect_is(lm, "list")
   # ensure that the list has the required elements
-  expect_that(names(lm), equals(c("type", "samples", "details")))
+  expect_equal(names(lm), c("type", "samples", "details"))
   # ensure that the samples matches the number requested
-  expect_that(length(lm$samples), equals(10))
+  expect_equal(length(lm$samples), 10)
   # ensure that values of samples is correct
-  expect_that(unlist(lm$samples), equals(c(332422.727880636, 2831751.79415706,
-                                           35602.2608120876, 3349352.73654269,
-                                           3632631.71769846, 927503.010814968,
-                                           966756.805719722, 941718.366417413,
-                                           569057.598433507, 1069488.76293628)))
+  expect_equal(signif(unlist(lm$samples), digits = 4),
+               signif(c(332422.727880636, 2831751.79415706, 35602.2608120876,
+                        3349352.73654269, 3632631.71769846, 927503.010814968,
+                        966756.805719722, 941718.366417413, 569057.598433507,
+                        1069488.76293628), digits = 4))
 })
 
 context("Sample LEF")
@@ -111,11 +111,10 @@ test_that("Sample LEF works with composition function", {
   expect_equal(names(dat), c("type", "samples", "details"))
   # ensure that the samples matches the number requested
   expect_equal(length(dat$samples), 10)
+  # ensure that LEF samples are always integers
+  expect_is(dat$samples, "integer")
   # ensure that values of samples is correct
-  expect_equal(dat$samples, c(5.20876621226071, 11.3834536928631,
-                              14.8272191228827, 2.13539043294175,
-                              12.0480617647494, 0, 7.69701064151479, 0, 0,
-                              6.41214819406418))
+  expect_equal(dat$samples, c(5, 11, 15, 2, 12, 0, 8, 0, 0, 6))
 })
 
 context("Standard simulation model")
@@ -154,7 +153,7 @@ test_that("Full wrapped scenario works as expected", {
                                                        "lm_h", "lm_conf"), row.names = c(NA, -1L), class = c("tbl_df",
                                                                                                              "tbl", "data.frame"))
 
-  results <- evaluate_promise(run_simulations(scenario, 100L, verbose = TRUE))
+  results <- evaluate_promise(run_simulations(scenario, 100L))
   expect_s3_class(results$result, "tbl_df")
   expect_equal(nrow(results$result), 100)
   expect_equal(length(results$result), 13)
