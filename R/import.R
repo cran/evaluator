@@ -1,8 +1,8 @@
 #' Import the scenario spreadsheet
 #'
 #' This is a wrapper function around \code{\link{import_scenarios}} and
-#' \code{\link{import_capabilities}}. When invoked, the output of both functions
-#' are written to disk.
+#'   \code{\link{import_capabilities}}. When invoked, the output of both functions
+#'   are written to disk.
 #'
 #' @importFrom dplyr %>%
 #' @importFrom readr write_csv
@@ -84,7 +84,6 @@ import_scenarios <- function(survey_file = system.file("survey",
   dplyr::select(scenarios, scenario_id = "ScenarioID", scenario = "Scenario",
          tcomm = "TComm", tef = "TEF", tc = "TC", lm = "LM",
          domain_id = "domain_id", controls = "Capabilities") %>%
-    dplyr::mutate(scenario_id = as.integer(.data$scenario_id)) %>%
     dplyr::mutate_at(vars("tef", "lm", "tc"), dplyr::funs(tolower)) %>%
     dplyr::arrange(.data$scenario_id)
 
@@ -92,9 +91,10 @@ import_scenarios <- function(survey_file = system.file("survey",
 
 #' Import capabilities from survey spreadsheet
 #'
-#' @importFrom dplyr mutate_ select_ arrange_
+#' @importFrom dplyr mutate select arrange
 #' @importFrom readxl read_excel
 #' @importFrom purrr map
+#' @importFrom rlang .data
 #' @param survey_file Path to survey XLSX file. If not supplied, a default sample file is used.
 #' @param domains Dataframe of domains and domain IDs.
 #' @export
@@ -106,19 +106,19 @@ import_capabilities <- function(survey_file = system.file("survey", "survey.xlsx
                                domains){
 
   raw_domains <- domains %>%
-    dplyr::mutate_(raw_data = ~ purrr::map(domain_id, ~ readxl::read_excel(
+    dplyr::mutate(raw_data = purrr::map(.data$domain_id, ~ readxl::read_excel(
       survey_file, skip=1, sheet=.)))
 
   ## ----walk_the_frame------------------------------------------------------
   dat <- raw_domains %>%
-    dplyr::mutate_(capabilities = ~ purrr::map(raw_data, split_sheet)) %>%
-    dplyr::select_(~ -raw_data)
+    dplyr::mutate(capabilities = purrr::map(.data$raw_data, split_sheet)) %>%
+    dplyr::select(-.data$raw_data)
 
   # fetch and clean capabilities
   capabilities <- tidyr::unnest(dat, capabilities) %>%
-    dplyr::select_(id = "CapabilityID", "domain_id", capability = "Name",
-                   diff = "DIFF") %>%
-    dplyr::mutate_("id" = ~ as.integer(id)) %>% dplyr::arrange_("id")
+    dplyr::select(capability_id = .data$CapabilityID, .data$domain_id,
+                  capability = .data$Name, diff = .data$DIFF) %>%
+    dplyr::arrange(.data$capability_id)
 
   capabilities
 }
@@ -126,10 +126,10 @@ import_capabilities <- function(survey_file = system.file("survey", "survey.xlsx
 #' Split a sheet of the survey spreadsheet into either capabilities or threats
 #'
 #' The default data collection Excel spreadsheet solicits threat
-#' scenarios and applicable controls for each domain. This function
-#' takes a single sheet from the spreadsheet, as read by \code{\link[readxl]{readxl}}
-#' and pulls out either the capabilities or threats, as directed by the
-#' user.
+#'   scenarios and applicable controls for each domain. This function
+#'   takes a single sheet from the spreadsheet, as read by \code{\link[readxl]{readxl}}
+#'   and pulls out either the capabilities or threats, as directed by the
+#'   user.
 #'
 #' @importFrom dplyr %>% select
 #' @param dat Raw sheet input from \code{\link[readxl]{readxl}}.

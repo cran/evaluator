@@ -8,7 +8,7 @@ output:
     logo: img/evaluator_logo_48px.png
     navbar:
     - align: right
-      href: https://github.com/davidski/evaluator
+      href: https://evaluator.severski.net
       title: About
     orientation: columns
     css: styles/html-styles.css
@@ -24,6 +24,7 @@ library(scales)
 library(viridis)
 library(ggplot2)
 library(dplyr)
+library(tibble)
 library(evaluator)
 library(extrafont)
 input_directory <- params$input_directory
@@ -32,9 +33,9 @@ results_directory <- params$results_directory
 
 ```{r load_data, include=FALSE}
 dat <- load_data(input_directory, results_directory)
-simulation_results<- dat$simulation_results
-scenario_summary<- dat$scenario_summary
-domain_summary<- dat$domain_summary
+simulation_results <- dat$simulation_results
+scenario_summary <- dat$scenario_summary
+domain_summary <- dat$domain_summary
 domains <- dat$domains
 mappings <- dat$mappings
 capabilities <-  dat$capabilities
@@ -48,7 +49,7 @@ scenarios <- dat$scenarios
 # determine the correct base font family to use
 basefont <- get_base_fontfamily()
 
-mappings <<- mappings
+mappings <- mappings
 
 # for values stored as full precentages, divide by 100 and pretty format 
 # with scales::percent()
@@ -59,17 +60,17 @@ custom_percent <- function(x) {
 
 get_loss_table <- function(tid) {
   scenario_data <- simulation_results[simulation_results$scenario_id == tid, ]
-  loss_table <- tibble::data_frame(Category = c("Loss Events / Year", "Loss Magnitude", 
-                                                "Total Loss Exposure"),
-                                   Minimum = c(min(scenario_data$loss_events), 
-                                               min(scenario_data$sle_min) %>% dollar,
-                                               min(scenario_data$ale) %>% dollar),
+  loss_table <- tibble::tibble(Category = c("Loss Events / Year", "Loss Magnitude", 
+                                            "Total Loss Exposure"),
+                               Minimum = c(min(scenario_data$loss_events), 
+                                           min(scenario_data$sle_min) %>% dollar,
+                                           min(scenario_data$ale) %>% dollar),
                                    Mean = c(mean(scenario_data$loss_events, na.rm = TRUE), 
-                                                mean(scenario_data$sle_mean, na.rm = TRUE) %>% dollar,
-                                      mean(scenario_data$ale, na.rm = TRUE) %>% dollar),
+                                            mean(scenario_data$sle_mean, na.rm = TRUE) %>% dollar,
+                                            mean(scenario_data$ale, na.rm = TRUE) %>% dollar),
                                    Mode = c(statip::mfv(scenario_data$loss_events)[1], 
-                                       statip::mfv(scenario_data$sle_median)[1] %>% as.numeric %>% dollar,
-                                       statip::mfv(scenario_data$ale)[1] %>% as.numeric %>% dollar),
+                                            statip::mfv(scenario_data$sle_median)[1] %>% as.numeric %>% dollar,
+                                            statip::mfv(scenario_data$ale)[1] %>% as.numeric %>% dollar),
                                    Maximum = c(max(scenario_data$loss_events), 
                                        max(scenario_data$sle_max) %>% dollar,
                                        max(scenario_data$ale) %>% dollar)
@@ -166,7 +167,7 @@ Loss Distribution Scatterplot
 
 ```{r show_all_boxplot, fig.height=4}
 shiny::renderPlot({
-  gg <- ggplot(simulation_results, aes(x = as.character(scenario_id), y = ale))
+  gg <- ggplot(simulation_results, aes(x = scenario_id, y = ale))
   gg <- gg + scale_y_continuous(label = dollar_millions)
   gg <- gg + labs(x = "Risk Scenario", y = "Annual Loss")
   gg <- gg + stat_boxplot(geom = 'errorbar', width = 0.5)

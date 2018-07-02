@@ -297,7 +297,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <div id="define-your-controls-and-security-domains" class="section level2">
 <h2>Define Your Controls and Security Domains</h2>
 <p>Evaluator needs to know the domains of your risk universe. These are the major buckets into which you divide your program. Examples of domains include Physical Security, Strategy, Policy, Business Continuity/Disaster Recovery, and Technical Security. Out of the box, Evaluator comes with a demonstration model based upon the <a href="https://hitrustalliance.net/hitrust-csf/">HITRUST CSF</a>.</p>
-<p>To start a fresh analysis using the default starter files, run <code>create_templates()</code>. This creates an <code>evaluator</code> directory in your home location with an <code>inputs</code> subdirectory containing a survey tool (Excel), a comma-seperated file defining the domains used in the survey tool, and a file defining the risk tolerance levels for your organization.</p>
+<p>To start a fresh analysis using the default starter files, run <code>create_templates()</code>. This creates an <code>evaluator</code> directory in your home location with an <code>inputs</code> subdirectory containing a survey tool (Excel), a comma-separated file defining the domains used in the survey tool, and a file defining the risk tolerance levels for your organization.</p>
 <p>If you have a different domain structure (e.g. ISO2700x, NIST CSF, or COBIT), you will need to edit the <code>inputs/domains.csv</code> file to include the domain names and the domain IDs, and a shorthand abbreviation for the domain (such as POL for the Policy domain).</p>
 <p>Indentifying the controls (or capabilities) and risk scenarios associated with each of your domains is critical to the final analysis. The elements are documented in the Excel workbook. The workbook includes one tab per domain, with each tab named after the domain IDs defined in the previous step. Each tab consists of a controls table and a threats table.</p>
 <div id="controls-table" class="section level3">
@@ -318,7 +318,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 </div>
 <div id="import-and-validate-the-scenarios" class="section level2">
 <h2>Import and Validate the Scenarios</h2>
-<p>To extract the spreadsheet into data files for further analysis, run <code>import_spreadsheet()</code>. Evaluator will extract the data and save two comma seperated files in the <code>inputs</code> directory with the results.</p>
+<p>To extract the spreadsheet into data files for further analysis, run <code>import_spreadsheet()</code>. Evaluator will extract the data and save two comma separated files in the <code>inputs</code> directory with the results.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">domains &lt;-<span class="st"> </span>readr<span class="op">::</span><span class="kw">read_csv</span>(<span class="st">&quot;~/evaluator/inputs/domains.csv&quot;</span>)</a>
 <a class="sourceLine" id="cb2-2" data-line-number="2"><span class="kw">import_spreadsheet</span>(<span class="st">&quot;~/evaluator/inputs/survey.xlsx&quot;</span>, domains, <span class="dt">output_dir =</span> <span class="st">&quot;~/evaluator/inputs&quot;</span>)</a></code></pre></div>
 <p>Afer importing, you are strongly encouraged to run <code>validate_scenarios()</code> to verify there are no data integrity issues. If there are errors detected, the validation process will abort and a message summarizing the problem is displayed. Correct the errors displayed, reimport, and repeat the validation process until there are no errors reported.</p>
@@ -352,10 +352,10 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <p>Other included report tools include <code>risk_dashboard()</code>, which produces a single-page static web dashboard view of all the scenarios and their results.</p>
 <p>For interactive exploration, use <code>explore_scenarios()</code> to launch a local copy of the Scenario Explorer application. The Scenario Explorer app may be used to view information about the individual scenarios and provides a sample overview of the entire program.</p>
 <p>For more in depth analysis, the following data files may be useful to exploration and analysis from either within R or with a R-compatible external business intelligence program such as Tableau:</p>
-<table style="width:79%;">
+<table style="width:81%;">
 <colgroup>
 <col width="34%"></col>
-<col width="44%"></col>
+<col width="45%"></col>
 </colgroup>
 <thead>
 <tr class="header">
@@ -388,7 +388,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb7-8" data-line-number="8"><span class="co"># Sample Report</span></a>
 <a class="sourceLine" id="cb7-9" data-line-number="9"><span class="kw">generate_report</span>(<span class="st">&quot;~/evaluator/inputs&quot;</span>, <span class="st">&quot;~/evaluator/results&quot;</span>, </a>
 <a class="sourceLine" id="cb7-10" data-line-number="10">                <span class="st">&quot;~/evaluator/risk_report.html&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>rstudioapi<span class="op">::</span><span class="kw">viewer</span>()</a></code></pre></div>
-<p>To view that same report as a Word document for editing, use <code>generate_report(&quot;~/evaluator/inputs&quot;, &quot;~/evaluator/results&quot;, &quot;~/evaluator/risk_report.docx&quot;, output_format = &quot;word_document&quot;)</code>.</p>
+<p>To view that same report as a Word document for editing, use <code>generate_report(&quot;~/evaluator/inputs&quot;, &quot;~/evaluator/results&quot;, &quot;~/evaluator/risk_report.docx&quot;, format = &quot;word&quot;)</code>.</p>
 </div>
 </div>
 

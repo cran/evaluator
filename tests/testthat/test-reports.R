@@ -1,9 +1,9 @@
 context("Reports")
 tmpdir <- tempdir()
 tmpdata <- file.path(tmpdir, "data")
-tmpinputs <- file.path(tmpdir, "inputs")
 dir.create(tmpdata)
-dir.create(tmpinputs)
+tmpinputs <- file.path(tmpdir, "inputs")
+dir.create(tmpinputs, showWarnings = FALSE)
 
 data("simulation_results", package = "evaluator", envir = environment())
 save(simulation_results, file = file.path(tmpdata, "simulation_results.rda"))
@@ -37,6 +37,7 @@ test_that("Analyze report renders", {
   expect_equivalent(normalizePath(result$result), normalizePath(file))
   unlink(file)
 })
+
 
 # test_that("Scenario Explorer launches", {
 #   expect_is(explore_scenarios(input_directory = tmpinputs,

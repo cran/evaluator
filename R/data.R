@@ -3,7 +3,7 @@
 #' A qualitative dataset of sample capabilities and qualitative level of effectiveness.
 #'
 #' \describe{
-#'   \item{id}{unique id of the capability}
+#'   \item{capability_id}{unique id of the capability}
 #'   \item{domain_id}{domain id to which the capability applies}
 #'   \item{capability}{full text summary of the capability}
 #'   \item{diff}{qualitative label of control effectiveness}
@@ -13,7 +13,7 @@
 #' Qualitative to quantitative mappings
 #'
 #' A dataset of sample mappings from qualitative labels to quantitative
-#' distribution parameters.
+#'   distribution parameters.
 #'
 #' \describe{
 #'   \item{type}{OpenFAIR taxonomy to which this mapping applies}
@@ -38,7 +38,7 @@
 #' Domain-level risk summary
 #'
 #' A dataset of quantified information security risk, summarized at the
-#' domain level.
+#'   domain level.
 #'
 #' \describe{
 #'   \item{domain_id}{abbreviated name of the domain}
@@ -51,7 +51,7 @@
 #' Scenario-level risk summary
 #'
 #' A dataset of quantified information security risk, summarized at the
-#' scenario level.
+#'   scenario level.
 #'
 #' \describe{
 #'   \item{domain_id}{domain id}
@@ -75,10 +75,10 @@
 #' }
 "scenario_summary"
 
-#' Quantified information security risk scenarios
+#' Quantified information risk scenarios
 #'
-#' A dataset of quantified information security risk scenarios, with parameters
-#' describing the distribution of each input.
+#' A dataset of quantified risk scenarios, with parameters
+#'   describing the distribution of each input.
 #'
 #' \describe{
 #'   \item{scenario}{full text description of the risk scenario}
@@ -86,19 +86,10 @@
 #'   \item{tcomm}{full text name of threat community}
 #'   \item{domain_id}{domain abbreviation}
 #'   \item{controls}{comma separated list of control ids that apply to this scenario}
-#'   \item{diff_params}{nested dataframe of the controls and difficult parameters associated with the scenario}
-#'   \item{tef_l}{threat event frequency - low}
-#'   \item{tef_ml}{threat event frequency - most likely}
-#'   \item{tef_h}{threat event frequency - high}
-#'   \item{tef_conf}{threat event frequency - confidence}
-#'   \item{tc_l}{threat capability - low}
-#'   \item{tc_ml}{threat capability - most likely}
-#'   \item{tc_h}{threat capability - high}
-#'   \item{tc_conf}{threat capability - confidence}
-#'   \item{lm_l}{loss magnitude - low}
-#'   \item{lm_ml}{loss magnitude - most likely}
-#'   \item{lm_h}{loss magnitude - high}
-#'   \item{lm_conf}{loss magnitude - confidence}
+#'   \item{diff_params}{nested dataframe of the controls and difficulty parameters associated with the scenario}
+#'   \item{tef_params}{list of the threat expected frequency parameters}
+#'   \item{tc_params}{list of the threat capability parameters}
+#'   \item{lm_params}{list of the loss magnitude parameters}
 #' }
 "quantitative_scenarios"
 
@@ -121,7 +112,7 @@
 #' Information security risk simulation results
 #'
 #' A dataset containing the full results of sample Monte Carlo
-#' simulations of information security risk scenarios.
+#'   simulations of information security risk scenarios.
 #'
 #' \describe{
 #'   \item{domain_id}{domain abbreviation}

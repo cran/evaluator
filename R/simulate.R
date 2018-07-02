@@ -1,16 +1,19 @@
 #' Run simulations for all scenarios
 #'
 #' Given a dataframe of quantitative scenarios, run an OpenFAIR Monte
-#' Carlo simulation for each scenario, returning a combined dataframe of all
-#' results.
+#'   Carlo simulation for each scenario, returning a combined dataframe of all
+#'   results.
 #'
 #' @import dplyr
 #' @importFrom dplyr progress_estimated bind_rows %>% mutate row_number
-#' @importFrom purrr safely is_null map_lgl transpose simplify
+#' @importFrom furrr future_map
+#' @importFrom purrr safely is_null map_lgl transpose simplify keep
 #' @importFrom tidyr nest
+#' @importFrom rlang .data
 #' @param scenario Quantitative scenarios.
 #' @param model OpenFAIR model to use.
 #' @param simulation_count Number of simulations for each scenario.
+#' @param ale_maximum Apply a maximum per year, per simulation, loss maximum.
 #' @param verbose Whether verbose console output is requested.
 #' @export
 #' @return Dataframe of raw results.
@@ -19,7 +22,9 @@
 #' # run a single scenario in a trivial number (10) of trials
 #' run_simulations(quantitative_scenarios[1, ], 10)
 run_simulations <- function(scenario, simulation_count = 10000L,
-                            model = "openfair_tef_tc_diff_lm", verbose = FALSE) {
+                            model = "openfair_tef_tc_diff_lm",
+                            ale_maximum = NULL,
+                            verbose = FALSE) {
 
   #model <- rlang::sym(model) # convert characters to symbol
   ## ----run_simulations-----------------------------------------------------
@@ -28,7 +33,6 @@ run_simulations <- function(scenario, simulation_count = 10000L,
 
     safe_calculate <- purrr::safely(eval(as.name(model)))
     safe_calculate(scenario = x,
-                  diff_estimates = x[[1, "diff_params"]],
                   n = simulation_count,
                   title = x$scenario_id,
                   verbose = verbose)
@@ -37,33 +41,33 @@ run_simulations <- function(scenario, simulation_count = 10000L,
   pb <- dplyr::progress_estimated(nrow(scenario))
   dat <- scenario %>% dplyr::mutate(id = row_number()) %>% tidyr::nest(-id)
   pb$print()
-  simulation_results <- dat$data %>% map(~ wrapped_calc(.x, .pb = pb))
-
-  #simulation_results <- purrrlyr::by_row(scenario, wrapped_calc, .pb = pb, .labels = FALSE)
-  #y <- simulation_results$`.out` %>% purrr::transpose()
+  simulation_results <- dat$data %>% furrr::future_map(~ {library(evaluator); wrapped_calc(.x, .pb = pb)}, .progress = TRUE)
 
   y <- simulation_results %>% purrr::transpose() %>% purrr::simplify()
   is_ok <- y$error %>% purrr::map_lgl(purrr::is_null)
+  errors <- y$error %>% purrr::keep(!is_ok)
 
   if (sum(is_ok) != nrow(scenario)) {
-    stop("Error encountered with with scenario IDs: ",
-         paste0(scenario[!is_ok,]$scenario_id, collapse = ", "))
+    stop("Errors encountered with one or more scenarios:\n",
+         paste(scenario[!is_ok,]$scenario_id, errors, sep = " - Error: ",
+               collapse = "\n"))
   }
 
   simulation_results <- dplyr::bind_rows(y$result)
 
+  # apply a maximum per year ALE, if requested
+  if (!(is.null(ale_maximum))) simulation_results$ale <- pmin(simulation_results$ale, ale_maximum)
+
   ## ----tidy_results--------------------------------------------------------
   # convert title back to scenario_id
-  simulation_results <- mutate_(simulation_results,
-                                "title" = ~ as.integer(title)) %>%
-    rename_("scenario_id" = "title")
+  simulation_results <- rename(simulation_results, scenario_id = .data$title)
 
   # add the domain_id column
   simulation_results <- simulation_results %>%
-    left_join(select_(scenario, 'c(scenario_id, domain_id)'),
-              by = c("scenario_id" = "scenario_id")) %>%
-    select_("domain_id", "scenario_id", "simulation", "threat_events",
-            "loss_events", "vuln", ~everything())
+    left_join(select(scenario, c(.data$scenario_id, .data$domain_id)),
+              by = "scenario_id") %>%
+    select(.data$domain_id, .data$scenario_id, .data$simulation, .data$threat_events,
+            .data$loss_events, .data$vuln, dplyr::everything())
 
   # store the date on which this simulation set was generated
   attr(simulation_results, "generated_on") <- Sys.time()

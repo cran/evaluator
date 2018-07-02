@@ -4,12 +4,10 @@
 \alias{summarize_domains}
 \title{Create domain-level summary of simulation results}
 \usage{
-summarize_domains(simulation_results, domains)
+summarize_domains(simulation_results)
 }
 \arguments{
 \item{simulation_results}{Simulation results dataframe.}
-
-\item{domains}{Domain mappings dataframe.}
 }
 \value{
 Simulation results summarized by domain
@@ -32,7 +30,8 @@ Summary stats created include:
 }
 }
 \examples{
+\dontrun{
 data(simulation_results)
-data(domains)
-summarize_domains(simulation_results, domains)
+summarize_domains(simulation_results)
+}
 }

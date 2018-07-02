@@ -5,19 +5,20 @@ test_that("Simulation summary", {
   dat <- summarize_scenarios(simulation_results)
   expect_equivalent(as.data.frame(dat), as.data.frame(scenario_summary))
 })
+test_that("Simulation summary handles NAs for tc/diff exceedance", {
+  data("simulation_results")
+  simulation_results[1, "mean_tc_exceedance"] <- NA
+  simulation_results[simulation_results$scenario_id==18 &
+                       simulation_results$simulation==1, "mean_diff_exceedance"] <- NA
+  dat <- summarize_scenarios(simulation_results)
+  expect_gt(dat[[54,"mean_tc_exceedance"]], 0)
+})
 
 test_that("Domain summary", {
   data("simulation_results")
   data("domains")
   data("domain_summary")
-  expect_equivalent(summarize_domains(simulation_results, domains), domain_summary)
-})
-
-test_that("Domain impact", {
-  data("domain_summary")
-  data("domains")
-  dat <- calculate_domain_impact(domain_summary, domains)
-  expect_equal(nrow(dat), nrow(domains))
+  expect_equivalent(summarize_domains(simulation_results), domain_summary)
 })
 
 test_that("Summarize to disk", {

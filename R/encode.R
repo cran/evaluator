@@ -1,13 +1,13 @@
 #' Encode qualitative data to quantitative parameters
 #'
 #' Given an input of:
-#' * qualitative risk scenarios
-#' * qualitative capabilities
-#' * translation table from qualitative labels to quantitative parameters
+#'   * qualitative risk scenarios
+#'   * qualitative capabilities
+#'   * translation table from qualitative labels to quantitative parameters
 #'
-#' Create a unified dataframe of quantitative scenarios ready for simulation.
+#'   Create a unified dataframe of quantitative scenarios ready for simulation.
 #'
-#' @importFrom dplyr rename_ select_ left_join
+#' @importFrom dplyr rename_ select_ left_join filter rowwise
 #' @importFrom rlang .data
 #' @importFrom purrr map
 #' @param scenarios Qualitative risk scenarios dataframe.
@@ -25,25 +25,37 @@ encode_scenarios <- function(scenarios, capabilities, mappings) {
                                               capabilities = capabilities,
                                               mappings = mappings))
   # fetch TEF params
-  scenarios <- dplyr::left_join(scenarios, mappings[mappings$type == "tef",],
+  tef_nested <- dplyr::filter(mappings, .data$type=="tef") %>%
+    dplyr::rowwise() %>%
+    dplyr::do(tef_params = list(min = .$l, mode = .$ml, max = .$h,
+                                shape = .$conf, func = "mc2d::rpert"),
+              label = .$label) %>%
+    dplyr::mutate(label = as.character(.data$label))
+  scenarios <- dplyr::left_join(scenarios, tef_nested,
                                 by = c("tef" = "label")) %>%
-    dplyr::rename("tef_l" = .data$l, "tef_ml" = .data$ml, "tef_h" = .data$h,
-                  "tef_conf" = .data$conf) %>%
-    dplyr::select_('-c(tef, type)')
+    dplyr::select(-.data$tef)
 
   # fetch TC params
-  scenarios <- dplyr::left_join(scenarios, mappings[mappings$type == "tc",],
+  tc_nested <- dplyr::filter(mappings, .data$type=="tc") %>%
+    dplyr::rowwise() %>%
+    dplyr::do(tc_params = list(min = .$l, mode = .$ml, max = .$h,
+                               shape = .$conf, func = "mc2d::rpert"),
+              label = .$label) %>%
+    dplyr::mutate(label = as.character(.data$label))
+  scenarios <- dplyr::left_join(scenarios, tc_nested,
                                 by = c("tc" = "label")) %>%
-    dplyr::rename_("tc_l" = "l", "tc_ml" = "ml", "tc_h" = "h",
-                   "tc_conf" = "conf") %>%
-    dplyr::select_('-c(tc, type)')
+    dplyr::select(-.data$tc)
 
   # fetch LM params
-  scenarios <- dplyr::left_join(scenarios, mappings[mappings$type == "lm",],
+  lm_nested <- dplyr::filter(mappings, .data$type=="lm") %>%
+    dplyr::rowwise() %>%
+    dplyr::do(lm_params = list(min = .$l, mode = .$ml, max = .$h,
+                               shape = .$conf, func = "mc2d::rpert"),
+              label = .$label) %>%
+    dplyr::mutate(label = as.character(.data$label))
+  scenarios <- dplyr::left_join(scenarios, lm_nested,
                                 by = c("lm" = "label")) %>%
-    dplyr::rename_("lm_l" = "l", "lm_ml" = "ml", "lm_h" = "h",
-                   "lm_conf" = "conf") %>%
-    dplyr::select_('-c(lm, type)')
+    dplyr::select(-.data$lm)
 
   scenarios
 }
@@ -51,11 +63,12 @@ encode_scenarios <- function(scenarios, capabilities, mappings) {
 #' Derive control difficulty parameters for a given qualitative scenario
 #'
 #' Given a comma-separated list of control IDs in a scenario, identify
-#' the qualitative rankings associated with each scenario, convert to
-#' their quantitative parameters, and return a dataframe of the set of
-#' parameters.
+#'   the qualitative rankings associated with each scenario, convert to
+#'   their quantitative parameters, and return a dataframe of the set of
+#'   parameters.
 #'
-#' @importFrom dplyr left_join mutate_ select rename
+#' @importFrom dplyr left_join mutate_ select rename pull
+#' @importFrom rlang .data
 #' @importFrom stringi stri_split_fixed
 #' @param capability_ids Comma-delimited list of capabilities in scope for a scenario.
 #' @param capabilities Dataframe of master list of all qualitative capabilities.
@@ -72,17 +85,22 @@ encode_scenarios <- function(scenarios, capabilities, mappings) {
 derive_controls <- function(capability_ids, capabilities, mappings) {
   control_list <- stringi::stri_split_fixed(capability_ids, ", ") %>% unlist()
 
-  control_list <- capabilities[capabilities$id %in% as.numeric(control_list), ] %>%
-    dplyr::rename(control_id = id)
+  control_list <- capabilities[capabilities$capability_id %in% control_list, ] %>%
+    dplyr::rename(control_id = .data$capability_id)
 
-  # Find the qualitative rating for each control ID, then lookup it's
+  # Find the qualitative rating for each control ID, then lookup its
   # distribution parameters from the mappings table
   #results <- capabilities[capabilities$id %in%
   #                          as.numeric(control_list), "diff"] %>%
   results <- control_list %>%
-    dplyr::mutate_(label = ~ as.character(diff)) %>% dplyr::select(-diff) %>%
+    dplyr::mutate(label = as.character(.data$diff)) %>%
+    dplyr::select(-diff) %>%
     dplyr::left_join(mappings[mappings$type == "diff", ],
-                     by = c(label = "label"))
+                     by = c(label = "label")) %>%
+    dplyr::rowwise() %>%
+    dplyr::do(diff_params = list(min = .$l, mode = .$ml, max = .$h,
+                                 shape = .$conf, func = "mc2d::rpert")) %>%
+    dplyr::pull()
 
   return(results)
 }

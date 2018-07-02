@@ -10,7 +10,7 @@ test_that("Scenario Encoding", {
                                       controls = c("1, 5, 7, 32, 14",
                                                    "14, 15, 16"),
                                       stringsAsFactors = FALSE)
-  capabilities <- data.frame(id = c(1L, 5L, 7L, 32L, 14L, 15L, 16L),
+  capabilities <- data.frame(capability_id = c(1L, 5L, 7L, 32L, 14L, 15L, 16L),
                              domain_id = c("ORG", "ORG", "ORG", "ORG", "ORG", "ORG", "ORG"),
                              capability = c("Capability 1.",  "Capability 5.", "Capability 7", "Capability 32.", "Capability 14.", "Capability 15.", "Capability 16."),
                              diff = c("5 - Optimized", "4 - Managed", "1 - Initial", "4 - Managed", "4 - Managed", "2 - Repeatable", "2 - Repeatable"),
@@ -26,7 +26,7 @@ test_that("Scenario Encoding", {
 })
 test_that("Control Encoding", {
   capability_ids <- "1, 7"
-  capabilities <- data.frame(id = c(1L, 5L, 7L, 32L, 14L, 15L, 16L),
+  capabilities <- data.frame(capability_id = c(1L, 5L, 7L, 32L, 14L, 15L, 16L),
                              domain_id = c("ORG", "ORG", "ORG", "ORG", "ORG", "ORG", "ORG"),
                              capability = c("Capability 1.",  "Capability 5.", "Capability 7.", "Capability 32.", "Capability 14.", "Capability 15.", "Capability 16."),
                              diff = c("5 - Optimized", "4 - Managed", "1 - Initial", "4 - Managed", "4 - Managed", "2 - Repeatable", "2 - Repeatable"),
@@ -35,6 +35,5 @@ test_that("Control Encoding", {
                          l = c(70, 0), ml = c(80, 20), h = c(95, 30),
                          conf = 3, stringsAsFactors = FALSE)
   dat <- derive_controls(capability_ids, capabilities, mappings)
-  expect_equal(nrow(dat), 2)
-  expect_equal(sum(complete.cases(dat)), 2)
+  expect_equal(length(dat), 2)
 })
