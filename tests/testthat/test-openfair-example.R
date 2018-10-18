@@ -6,8 +6,9 @@ test_that("openfairExample() works", {
   # Don't run these tests on the CRAN build servers
   skip_on_cran()
 
-  # shiny testing is not quite working yet
-  skip("Shinytest scaffolding is not complete")
+  # Not quite ready to turn this on in CI
+  skip_on_appveyor()
+  skip_on_travis()
 
   # Use compareImages=FALSE because the expected image screenshots were created
   # on a Mac, and they will differ from screenshots taken on the CI platform,
