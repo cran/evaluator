@@ -17,7 +17,7 @@
 
 
 <style type="text/css">code{white-space: pre;}</style>
-<style type="text/css">
+<style type="text/css" data-origin="pandoc">
 a.sourceLine { display: inline-block; line-height: 1.25; }
 a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
 a.sourceLine:empty { height: 1.2em; }
@@ -35,7 +35,7 @@ a.sourceLine { text-indent: -1em; padding-left: 1em; }
 pre.numberSource a.sourceLine
   { position: relative; left: -4em; }
 pre.numberSource a.sourceLine::before
-  { content: attr(data-line-number);
+  { content: attr(title);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
     border: none; pointer-events: all; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
@@ -79,7 +79,29 @@ code span.st { color: #4070a0; } /* String */
 code span.va { color: #19177c; } /* Variable */
 code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
 </style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
 
 
 
@@ -283,7 +305,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <h2>Starting from Scratch</h2>
 <ul>
 <li>Create a starting Evaluator working directory via <code>create_templates()</code></li>
-<li>Customize the domains used in your organization by editting the <code>domains.csv</code> file to include the domains (and their abreviations) which are appropriate for your risk domain and organization.</li>
+<li>Customize the domains used in your organization by editing the <code>domains.csv</code> file to include the domains (and their abbreviations) which are appropriate for your risk domain and organization.</li>
 <li>Edit the <code>survey.xlsx</code> spreadsheet to include the risk scenarios and the threats for each scenario which you wish to monitor on an ongoing basis.</li>
 <li>Create a source code repository (such as a GitHub for Enterprise repo) for your ongoing risk analysis work.</li>
 <li>Add a tag to designate the just committed files (without analysis) as your reference documentation.</li>
@@ -311,8 +333,8 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <li>Edit the inputs for your situation.</li>
 <li>Run the quick start script with code like the following:</li>
 </ol>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1">base_dir &lt;-<span class="st"> &quot;~/evaluator&quot;</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">source</span>(<span class="st">&quot;~/evaluator/run_analysis.R&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1">base_dir &lt;-<span class="st"> &quot;~/evaluator&quot;</span></a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="kw">source</span>(<span class="st">&quot;~/evaluator/run_analysis.R&quot;</span>)</a></code></pre></div>
 </div>
 
 
