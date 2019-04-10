@@ -1,7 +1,9 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Evaluator <img alt="Evaluator Logo" title="Evaluator" align="right" src="inst/rmd/img/evaluator_logo.jpg" width="100" style="float:right;width:100px;"/>
+# evaluator <a href="https://evaluator.tidyrisk.org"><img alt="evaluator Logo" title="evaluator" align="right" src="man/figures/logo.png" height="139"/></a>
+
+<!-- badges: start -->
 
 [![Build
 Status](https://travis-ci.org/davidski/evaluator.svg?branch=master)](https://travis-ci.org/davidski/evaluator)
@@ -11,38 +13,40 @@ Status](https://ci.appveyor.com/api/projects/status/github/davidski/evaluator?br
 Status](https://codecov.io/gh/davidski/evaluator/branch/master/graph/badge.svg)](https://codecov.io/github/davidski/evaluator?branch=master)
 [![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/evaluator)](https://cran.r-project.org/package=evaluator)
 ![downloads](https://cranlogs.r-pkg.org/badges/grand-total/evaluator)
+<!-- badges: end -->
 
 ## Overview
 
-Evaluator is an open source quantitative risk analysis toolkit. Based on
-the OpenFAIR [taxonomy](https://www2.opengroup.org/ogsys/catalog/C13K)
+evaluator is an open source quantitative risk analysis toolkit. Based on
+the OpenFAIR [ontology](https://www2.opengroup.org/ogsys/catalog/C13K)
 and risk assessment
-[standard](https://www2.opengroup.org/ogsys/catalog/C13G), Evaluator
+[standard](https://www2.opengroup.org/ogsys/catalog/C13G), evaluator
 empowers an organization to perform a quantifiable, repeatable, and
 data-driven risk review.
 
 Three sample outputs of this toolkit are available:
 
-1)  A detailed risk analysis template, located at
-    [RPubs](https://rpubs.com/davidski/evaluator_risk_analysis)
-2)  A one page risk dashboard, also located at
-    [RPubs](https://rpubs.com/davidski/evaluator_risk_dashboard)
+1)  A [sample risk
+    analysis](https://evaluator.tidyrisk.org/reports/evaluator_risk_analysis.html)
+    report
+2)  A one page [risk
+    dashboard](https://evaluator.tidyrisk.org/reports/evaluator_risk_dashboard.html)
 3)  A demonstration copy of [Scenario
     Explorer](https://davidski.shinyapps.io/scenario_explorer)
 
 ## Installation
 
-Install Evaluator via the standard CRAN mechanisms. If you wish to use
-the optional, but recommended, reporting functions, use the
-`dependencies = TRUE` option to install the needed additional packages
-are available.
+Install evaluator via the standard CRAN mechanisms. If you wish to use
+the optional, but recommended, reporting functions, also install the
+suggested dependencies. These additional packages are not needed for
+modeling, but are used in the generation of reports.
 
 ``` r
 install.packages("evaluator", dependencies = TRUE)
 ```
 
 If you wish to run the development (and potentially bleeding edge)
-version of Evaluator, you can install directly from GitHub via the
+version of evaluator, you can install directly from GitHub with the
 following `devtools` command.
 
 ``` r
@@ -50,18 +54,17 @@ following `devtools` command.
 devtools::install_github("davidski/evaluator", dependencies = TRUE)
 ```
 
-Optionally, a prototype Docker image with all dependencies pre-installed
-is available on the [Docker
-Hub](https://hub.docker.com/r/davidski/evaluator-docker/).
+Optionally, Docker images with all dependencies pre-installed are
+available on the [Docker Hub](https://hub.docker.com/r/tidyrisk).
 
 ## Usage
 
-The primary workflow for Evaluator involves gathering data in Excel then
+The primary workflow for evaluator involves gathering data in Excel then
 running the analysis from within the R and Evaluator environment:
 
 From Excel:
 
-1.  Populate the Evaluator-supplied data acquisition spreadsheet
+1.  Populate the evaluator-supplied data acquisition spreadsheet
 
 From Evaluator:
 
@@ -73,14 +76,13 @@ From Evaluator:
 
 A detailed guide is available in the vignette accessed via
 `vignette("usage", package="evaluator")`. A short screencast showing the
-basic workflow (not including generation of reports) is available
-below:
+basic workflow (not including generation of reports) is available below:
 
 [![demo](https://asciinema.org/a/qIBU3lhPkWHGMYD9O2GU1YgcU.png)](https://asciinema.org/a/qIBU3lhPkWHGMYD9O2GU1YgcU?s=2&autoplay=1)
 
 ## Where to Go from Here
 
-While Evaluator is a powerful tool, it does not attempt to address
+While evaluator is a powerful tool, it does not attempt to address
 interactions between risk scenarios, rolling up multiple levels of risk
 into aggregations, or other advanced topics. As you become more
 comfortable with quantitative risk analysis, you may wish to dive deeper

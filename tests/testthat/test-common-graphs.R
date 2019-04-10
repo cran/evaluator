@@ -1,4 +1,3 @@
-context("Graphics")
 test_that("Basefont selection works", {
   dat <- get_base_fontfamily()
   expect_type(dat, "character")
@@ -21,19 +20,47 @@ test_that("Theme functions", {
 })
 
 test_that("Domain VaR heatmap", {
-  data(domain_summary)
-  gg <- generate_heatmap(domain_summary)
+  data(mc_domain_summary)
+  gg <- generate_heatmap(mc_domain_summary)
   expect_s3_class(gg, "gg")
 })
 
-test_that("Scatterplot", {
-  data(simulation_results)
-  gg <- generate_scatterplot(simulation_results, scenario_id = 50)
+test_that("generate_scatterplot() throws a warning", {
+  data(mc_simulation_results)
+  expect_warning(generate_scatterplot(mc_simulation_results, scenario_id = "RS-50"))
+})
+
+test_that("loss_scatterplot() functions", {
+  data(mc_simulation_results)
+  mc_simulation_results %>% filter(scenario_id == "RS-50") %>%
+    unnest(.data$results) -> my_results
+  gg <- loss_scatterplot(my_results)
+  expect_s3_class(gg, "gg")
+})
+
+test_that("Exposure histogram", {
+  data(mc_simulation_results)
+  gg <- mc_simulation_results %>% filter(scenario_id == "RS-50") %>%
+    unnest(.data$results) %>% exposure_histogram()
+  expect_s3_class(gg, "gg")
+})
+
+test_that("Exposure histogram with VaR line", {
+  data(mc_simulation_results)
+  gg <- mc_simulation_results %>% filter(scenario_id == "RS-50") %>%
+    unnest(.data$results) %>% exposure_histogram(show_var_95 = TRUE)
   expect_s3_class(gg, "gg")
 })
 
 test_that("Domain-level outcomes", {
-  data(domain_summary)
-  gg <- generate_event_outcomes_plot(domain_summary)
+  data(mc_domain_summary)
+  gg <- generate_event_outcomes_plot(mc_domain_summary)
+  expect_s3_class(gg, "gg")
+})
+
+test_that("Loss_exceedance_curve", {
+  data("mc_simulation_results")
+  gg <- summarize_iterations(mc_simulation_results$results) %>%
+    loss_exceedance_curve()
   expect_s3_class(gg, "gg")
 })

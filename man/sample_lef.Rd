@@ -4,12 +4,14 @@
 \alias{sample_lef}
 \title{Sample loss event frequency}
 \usage{
-sample_lef(func = NULL, params = NULL)
+sample_lef(n, .func = NULL, params = NULL)
 }
 \arguments{
-\item{func}{Function to use to simulate LEF, defaults to \code{\link[stats]{rnorm}}.}
+\item{n}{Number of samples to generate.}
 
-\item{params}{Optional parameters to pass to \code{func}}
+\item{.func}{Function to use to simulate LEF, defaults to \code{\link[stats]{rnorm}}.}
+
+\item{params}{Optional parameters to pass to \code{.func}.}
 }
 \value{
 List containing type ("lef"), samples (as a vector), and details (as a list).
@@ -22,8 +24,7 @@ Other OpenFAIR helpers: \code{\link{compare_tef_vuln}},
   \code{\link{get_mean_control_strength}},
   \code{\link{openfair_tef_tc_diff_lm}},
   \code{\link{sample_diff}}, \code{\link{sample_lm}},
-  \code{\link{sample_tc}}, \code{\link{sample_tef}},
-  \code{\link{sample_vuln}},
+  \code{\link{sample_tc}}, \code{\link{sample_vuln}},
   \code{\link{select_loss_opportunities}}
 }
 \concept{OpenFAIR helpers}

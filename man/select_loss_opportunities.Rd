@@ -4,12 +4,16 @@
 \alias{select_loss_opportunities}
 \title{Determine which threat events result in loss opportunities}
 \usage{
-select_loss_opportunities(tc, diff)
+select_loss_opportunities(tc, diff, n = NULL, ...)
 }
 \arguments{
 \item{tc}{Threat capability (as a percentage).}
 
 \item{diff}{Difficulty (as a percentage).}
+
+\item{n}{Number of samples to generate.}
+
+\item{...}{Optional parameters (currently ignored).}
 }
 \value{
 List containing boolean values of length TC (as a vector) and details (as a list).
@@ -30,6 +34,6 @@ Other OpenFAIR helpers: \code{\link{compare_tef_vuln}},
   \code{\link{openfair_tef_tc_diff_lm}},
   \code{\link{sample_diff}}, \code{\link{sample_lef}},
   \code{\link{sample_lm}}, \code{\link{sample_tc}},
-  \code{\link{sample_tef}}, \code{\link{sample_vuln}}
+  \code{\link{sample_vuln}}
 }
 \concept{OpenFAIR helpers}

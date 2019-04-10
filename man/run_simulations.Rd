@@ -2,33 +2,37 @@
 % Please edit documentation in R/simulate.R
 \name{run_simulations}
 \alias{run_simulations}
-\title{Run simulations for all scenarios}
+\title{Run simulations for a list of scenarios}
 \usage{
-run_simulations(scenario, simulation_count = 10000L,
-  model = "openfair_tef_tc_diff_lm", ale_maximum = NULL,
-  verbose = FALSE)
+run_simulations(scenario, ..., iterations = 10000L, ale_maximum = NULL,
+  verbose = FALSE, simulation_count = NULL)
 }
 \arguments{
-\item{scenario}{Quantitative scenarios.}
+\item{scenario}{A \link{tidyrisk_scenario} object.}
 
-\item{simulation_count}{Number of simulations for each scenario.}
+\item{...}{Additional \code{tidyrisk_scenario} objects to simulate.}
 
-\item{model}{OpenFAIR model to use.}
+\item{iterations}{Number of iterations to run on each scenario.}
 
-\item{ale_maximum}{Apply a maximum per year, per simulation, loss maximum.}
+\item{ale_maximum}{Maximum practical annual losses.}
 
 \item{verbose}{Whether verbose console output is requested.}
+
+\item{simulation_count}{\strong{DEPRECATED} Number of simulations to perform.}
 }
 \value{
-Dataframe of raw results.
+A list of one dataframe of results for each scenario.
 }
 \description{
-Given a dataframe of quantitative scenarios, run an OpenFAIR Monte
-Carlo simulation for each scenario, returning a combined dataframe of all
-results.
+Given a list of quantitative scenario objects of type \code{tidyrisk_scenario},
+run a OpenFAIR Monte Carlo simulation for each scenario.
 }
 \examples{
-data(quantitative_scenarios)
-# run a single scenario in a trivial number (10) of trials
-run_simulations(quantitative_scenarios[1, ], 10)
+# fetch three scenarios for this example
+data(mc_quantitative_scenarios)
+scenario_a <- mc_quantitative_scenarios[[1, "scenario"]]
+scenario_b <- mc_quantitative_scenarios[[2, "scenario"]]
+scenario_c <- mc_quantitative_scenarios[[3, "scenario"]]
+run_simulations(scenario_a, scenario_b, scenario_c, iterations = 10)
+
 }

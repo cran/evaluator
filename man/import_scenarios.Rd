@@ -4,11 +4,10 @@
 \alias{import_scenarios}
 \title{Import scenarios from survey spreadsheet}
 \usage{
-import_scenarios(survey_file = system.file("survey", "survey.xlsx",
-  package = "evaluator"), domains)
+import_scenarios(survey_file = NULL, domains = NULL)
 }
 \arguments{
-\item{survey_file}{Path to survey XLSX file. Defaults to a sample file if not supplied.}
+\item{survey_file}{Path to survey Excel file. Defaults to a sample file if not supplied.}
 
 \item{domains}{Dataframe of domains and domain IDs.}
 }
@@ -19,6 +18,6 @@ Extracted qualitative scenarios as a dataframe.
 Import scenarios from survey spreadsheet
 }
 \examples{
-data(domains)
-import_scenarios(domains = domains)
+data(mc_domains)
+import_scenarios(domains = mc_domains)
 }

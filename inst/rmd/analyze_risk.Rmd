@@ -1,19 +1,23 @@
 ---
 title: "Strategic Information Risk Analysis"
-author: "Evaluator toolkit (https://evaluator.severski.net)"
+author: "Evaluator toolkit (https://evaluator.tidyrisk.org)"
 output:
   html_document:
     css: "html-styles.css"
-    fig_caption: yes
+    fig_caption: FALSE
     toc: yes
     toc_depth: 3
     toc_float: yes
+    includes:
+      in_header: "open-sans-import.html"
   html_notebook:
     code_folding: hide
     css: "html-styles.css"
     toc: yes
     toc_depth: 3
     toc_float: yes
+    includes:
+      in_header: "open-sans-import.html"
   pdf_document:
     fig_caption: yes
     latex_engine: xelatex
@@ -33,7 +37,7 @@ header-includes:
 params:
   input_directory: "~/evaluator/inputs"
   results_directory: "~/evaluator/results"
-  focus_scenario_ids: !r c(51, 12)
+  focus_scenario_ids: !r c("RS-51", "RS-12")
 ---
 
 ```{r setup, include=FALSE}
@@ -42,19 +46,24 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, cache = FALSE,
                       fig.align = 'center')
                       #fig.width = .95 * page_width)
 
+# graphics
 library(ggplot2)
 library(ggalt)
 library(extrafont)
 library(scales)
 library(viridis)
+
+# data manipulation
 library(dplyr)
 library(purrr)
-library(readr)
 library(rlang)
-library(psych)
-library(tidyr)
-library(pander)
+library(stringr)
 library(tibble)
+library(tidyr)
+
+# summary stats and reporting
+library(psych)
+library(pander)
 library(evaluator)
 
 panderOptions('table.split.table', Inf) # allow pander to make pages wide
@@ -69,32 +78,40 @@ results_directory <- params$results_directory
 ```{r load_data, echo = FALSE, message = FALSE}
 dat <- read_quantitative_inputs(input_directory)
 
-simulation_results <- readRDS(file.path(results_directory, "simulation_results.Rds"))
+simulation_results <- readRDS(file.path(results_directory, "simulation_results.rds"))
 scenario_summary <- summarize_scenarios(simulation_results)
-domain_summary <- summarize_domains(simulation_results)
+#scenario_summary <- mutate(simulation_results, summary = map(results, summarize_scenario)) 
+scenario_outliers <- identify_outliers(scenario_summary) %>% 
+  filter(outlier == TRUE) %>% pull(scenario_id)
+scenario_summary <- scenario_summary %>% mutate(outlier = scenario_id %in% scenario_outliers)
 
-capabilities <- readr::read_csv(file.path(input_directory, "capabilities.csv"),
-                                col_types = readr::cols(.default = readr::col_character()))
+domain_summary  <- summarize_domains(simulation_results)
 
-domains <- dat$domains
+max_loss        <- calculate_max_losses(simulation_results, scenario_outliers)
+domains         <- dat$domains
 risk_tolerances <- dat$risk_tolerances
-scenario_outliers <- filter(scenario_summary, outlier == TRUE) %>% pull(scenario_id)
-scenarios <- dat$quantitative_scenarios
-
-qualitative_scenarios <- readr::read_csv(file.path(
-  input_directory, "qualitative_scenarios.csv"),
-  col_types = readr::cols(.default = readr::col_character()))
+scenarios       <- dat$quantitative_scenarios
 ```
 
 ```{r useful_values}
-focus_scenarios <- params$focus_scenario_ids    # scenarios of particular management interest 
+# unique controls
+capabilities <- purrr::map2_dfr(scenarios$control_descriptions,
+                                scenarios$domain_id, 
+                                ~tibble(capability = as_vector(.x), 
+                                        capability_id = names(.x), 
+                                        domain_id = .y)) %>% 
+  distinct()
 
-# assign risk tolerance dataframe as vector
+# scenarios of particular management interest 
+focus_scenarios <- params$focus_scenario_ids
+
+# convert risk tolerance dataframe to a named vector
 risk_tolerance <- risk_tolerances$amount
 names(risk_tolerance) <- risk_tolerances$level %>% tolower
 
 # Precalculate the standard order of scenarios (domain, then ID of the scenario)
-scenario_order <- simulation_results %>% group_by(domain_id, scenario_id) %>% summarise()
+scenario_order <- simulation_results %>% distinct(domain_id, scenario_id) %>% 
+  arrange(domain_id, scenario_id)
 
 # text vector of numbers to English words
 numbers <- c("one", "two", "three", "four", "five", "six", "seven", "eight", 
@@ -109,54 +126,52 @@ domain_summary <- left_join(domain_summary, domains, by = "domain_id")
 
 ```{r enhance_summary_object}
 # assign loss tolerance to ALE VaR size
-scenario_summary <-
-  mutate(scenario_summary, annual_tolerance = ifelse(ale_var >= risk_tolerance["high"], 
-                                                     "High", 
-                                                     ifelse(ale_var >= risk_tolerance["medium"], "Medium", "Low"))) %>% 
+scenario_summary <- 
+  scenario_summary %>% 
+  # assign categorical label
+  mutate(annual_tolerance = case_when(
+    ale_var >= risk_tolerance["high"] ~  "High",
+    ale_var >= risk_tolerance["medium"] ~  "Medium",
+    TRUE ~ "Low")) %>% 
+  # convert to ordered factor
   mutate(annual_tolerance = factor(annual_tolerance, 
                                    levels = c("High", "Medium", "Low"), 
                                    ordered = TRUE)) 
-scenario_outliers <- scenario_summary[which(scenario_summary$outlier == TRUE), 
-                                      "scenario_id"] %>% unlist %>% unname
-```
-
-```{r calculate_max_losses}
-max_loss <- calculate_max_losses(simulation_results, scenario_outliers)
 ```
 
 # Summary
 
-> This report is based on `r scales::comma(attr(simulation_results, "simulation_count"))` 
-simulations performed over `r scales::comma(length(unique(simulation_results$scenario_id)))` 
+> This report is based on 
+`r sum(map_dbl(simulation_results$results, ~attr(.x, "iterations"))) %>% scales::comma()` 
+iterations performed over `r scales::comma(length(unique(simulation_results$scenario_id)))` 
 risk scenarios and `r nrow(capabilities)` capabilities on 
-`r format(attr(simulation_results, "generated_on"), "%F %H:%M:%S%z")`.
+`r format(map(simulation_results$results, ~attr(.x, "generated_on")) %>% purrr::reduce(max), "%F %H:%M:%S%z")`.
 
 ```{r risk_tolerance_exceedance}
-loss_exceedance <- simulation_results %>% 
-  group_by(simulation) %>% 
-  summarize(loss = sum(ale)) %>% 
-  mutate(tolerance = ifelse(loss >= risk_tolerance["high"], "High", 
-                            ifelse(loss >= risk_tolerance["medium"], "Medium", "Low"))) %>% 
+loss_exceedance <- summarize_iterations(simulation_results$results) %>% 
+  mutate(tolerance = case_when(
+    ale_sum >= risk_tolerance["high"] ~ "High", 
+    ale_sum >= risk_tolerance["medium"] ~ "Medium",
+    TRUE ~ "Low")) %>% 
   count(tolerance)
 ```
 
 Total yearly losses are estimated to exceed the organization's major risk 
 threshold of `r dollar(risk_tolerance["high"])` 
-`r percent(ifelse (nrow(filter(loss_exceedance, tolerance == "High")) == 0, 0, loss_exceedance[loss_exceedance$tolerance == "High", ]$n / max(simulation_results$simulation)))` of the time.
+`r percent(ifelse (nrow(filter(loss_exceedance, tolerance == "High")) == 0, 0, loss_exceedance[loss_exceedance$tolerance == "High", ]$n / max(simulation_results$iteration)))` of the time.
 
 The following table shows the maximum, 95th percentile Value at Risk (VaR), 
 mean, and minimum annual losses.
 
 ```{r overall_exposure, echo=FALSE}
-overall <- simulation_results %>% group_by(simulation) %>% 
-                     summarize(ale = sum(ale)) %>% select(ale) %>%
-                     ungroup
-tibble::tibble("Value at Risk" = dollar(quantile(overall$ale, c(0.95))),
-           "Maximum Loss" = dollar(max(overall$ale)),
-           "Mean Loss" = dollar(mean(overall$ale)),
-           "Minimum Loss" = dollar(min(overall$ale))
-           ) %>% pander(justify = "right", 
-                        caption = paste("Total Annual Loss Exposure"))
+overall <- summarize_iterations(simulation_results$results)
+tibble::tibble(
+  "Value at Risk" = dollar(quantile(overall$ale_sum, c(0.95))),
+  "Maximum Loss" = dollar(max(overall$ale_sum)),
+  "Mean Loss" = dollar(mean(overall$ale_sum)),
+  "Minimum Loss" = dollar(min(overall$ale_sum))
+  ) %>% 
+  pander(justify = "right", caption = "Total Annual Loss Exposure")
 ```
 
 ## Loss Exceedance Curve
@@ -171,20 +186,20 @@ or at least
 outliers are included.
 
 ```{r loss_exceedance_curve, fig.cap="Loss Exceedance Curve"}
-max_loss %>% 
-  arrange(outliers, max_loss) %>% 
-  group_by(outliers) %>% mutate(prob = 1 - percent_rank((max_loss))) %>% 
-  ggplot(., aes(prob, max_loss, group = outliers)) -> gg
-gg <- gg + geom_path()
-
 label_dat <- group_by(max_loss, outliers) %>% 
   summarize(max_loss = max(max_loss)) %>% 
   mutate(text = ifelse(outliers == TRUE, "All Scenarios", "Outliers Excluded"))
 
+gg <- max_loss %>% 
+  arrange(outliers, max_loss) %>% 
+  group_by(outliers) %>% mutate(prob = 1 - percent_rank((max_loss))) %>% 
+  ggplot(., aes(prob, max_loss, group = outliers))
+gg <- gg + geom_path()
+
 # set 80% threshold line
 gg <- gg + geom_vline(xintercept = 0.8, color = "red", size = 1) 
 gg <- gg + annotate("text", x = 0.8, y = max(max_loss$max_loss), 
-                    label = percent(.8), hjust = "right")
+                    label = percent(.8, accuracy = 1), hjust = "right")
 
 #gg <- gg + scale_color_viridis(discrete = TRUE, 
 #                               labels = c("Excluded", "Included"), 
@@ -204,15 +219,23 @@ gg <- gg + labs(x = "Chance of Equal or Greater Loss", y = "Loss",
 gg
 ```
 
-## Risk By Domain
+## Risk Exposure By Domain
 
+```{r top_domains, echo = FALSE}
+top_domains_by_var <- domain_summary %>% 
+  top_n(n = 3, wt = ale_var) %>% 
+  arrange(desc(ale_var))
+```
 The top three information security program domains with the largest likely 
-losses are `r domain_summary[[1, "domain"]]`, `r domain_summary[[2, "domain"]]`, and 
-`r domain_summary[[3, "domain"]]`. The losses associated with each domain of the 
+losses are `r top_domains_by_var[[1, "domain"]]`, 
+`r top_domains_by_var[[2, "domain"]]`, and 
+`r top_domains_by_var[[3, "domain"]]`. The losses associated with each domain of the 
 program are described in the following table.
 
 ```{r domain_impact, echo = FALSE}
-mutate_at(domain_summary, vars(-one_of("domain_id", "domain")), funs(dollar)) %>% 
+domain_summary %>% 
+  arrange(desc(ale_var)) %>% 
+  mutate_at(vars(-one_of("domain_id", "domain")), scales::dollar) %>% 
   select("Domain" = domain, 
          "Value at Risk" = ale_var,
          "Maximum" = ale_max, 
@@ -245,13 +268,14 @@ All of the scenarios are ranked against one another based upon their value at
 risk. The top five scenarios are:
 
 ```{r top_5_risks}
-top_n(scenario_summary, 5, ale_var) %>% 
+scenario_summary %>% 
+  top_n(n = 5, wt = ale_var) %>% 
   arrange(desc(ale_var)) %>% 
   left_join(scenarios, by = c("scenario_id" = "scenario_id", 
-                              "domain_id" = "domain_id")) %>%
+                              "domain_id" = "domain_id")) %>%  
   mutate(ale_var = dollar(ale_var), ale_median = dollar(ale_median),
-         full_label = paste(domain_id, scenario_id, sep = " - ")) %>% 
-  select("Scenario ID" = full_label, Scenario = scenario, 
+         full_label = str_glue("{domain_id} - {scenario_id}")) %>% 
+  select("Scenario ID" = full_label, Scenario = scenario_description, 
          "Median Annual Loss" = ale_median, "Value at Risk" = ale_var) %>% 
   pander(justify = c(rep("left", 2), rep("right", 2)), 
          caption = "Top Five Scenarios by Value at Risk")
@@ -262,17 +286,18 @@ A list of all evaluated risk scenarios is in [Appendix A](#scenario_list).
 ## Key Capability Weaknesses
 
 Threats most frequently overcome the control capabilities, resulting in 
-losses, in  the domains of `r domain_summary[[1, "domain"]]`, 
+losses, in the domains of `r domain_summary[[1, "domain"]]`, 
 `r domain_summary[[2, "domain"]]`, and `r domain_summary[[3, "domain"]]`.
 
 ```{r domain_weakness, echo = FALSE}
-select(domain_summary, domain, mean_vuln, mean_tc_exceedance, mean_diff_exceedance) %>% 
+domain_summary %>% 
+  select(domain, mean_vuln, mean_tc_exceedance, mean_diff_exceedance) %>% 
+  mutate_at(vars(starts_with("mean_")), scales::percent_format()) %>% 
   rename("Domain" = domain, 
-       "Succesful Threat Events" = mean_vuln,
-       "Control Gap" = mean_tc_exceedance,
-       "Surplus Control Strength" = mean_diff_exceedance) %>% 
-  pander(justify = c("left", "right", "right", "right"), 
-                 caption = "Domain Weaknesses")
+         "Succesful Threat Events" = mean_vuln,
+         "Control Gap" = mean_tc_exceedance,
+         "Surplus Control Strength" = mean_diff_exceedance) %>% 
+  pander(justify = c("left", "right", "right", "right"), caption = "Domain Weaknesses")
 ```
 
 ## Focus Risk Scenarios
@@ -285,11 +310,12 @@ delete this section if there are no particular areas of focus.
 
 ```{r make_scenario_table, echo=FALSE}
 display_scenario_table <- function(scenario_summary, id) {
-  filter(scenario_summary, scenario_id == id) %>% 
+  scenario_summary %>% 
+  filter(scenario_id == id) %>% 
   summarise(
     "Value at Risk" = dollar(ale_var),
     "Vulnerability (% of events resulting in loss)" = percent(mean_vuln),
-    "Mean Control Gap" = percent(mean_tc_exceedance / 100),
+    "Mean Control Gap" = percent(mean_tc_exceedance),
     "Maximum Annual Loss" = dollar(ale_max),
     "Median Annual Loss" = dollar(round(ale_median)),
     "Maximum Single Loss" = dollar(sle_max),
@@ -297,13 +323,13 @@ display_scenario_table <- function(scenario_summary, id) {
   ) %>% t %>% pander(justify = c("left", "right"), 
                      emphasize.rownames = FALSE, 
                      style = 'rmarkdown',
-                     caption = paste("Scenario", id, "Overview"))
+                     caption = str_glue("Scenario {id} Overview"))
 }
 ```
 
 ### Key Scenario A
 
-Scenario: `r filter(scenarios, scenario_id == focus_scenarios[1]) %>% select(scenario) %>% unlist %>% unname`
+Scenario: `r filter(scenarios, scenario_id == focus_scenarios[1]) %>% select(scenario_description) %>% unlist %>% unname`
 
 ```{r scenarioA_details, echo=FALSE}
 display_scenario_table(scenario_summary, focus_scenarios[1])
@@ -311,8 +337,7 @@ display_scenario_table(scenario_summary, focus_scenarios[1])
 
 ### Key Scenario B
 
-Scenario: `r filter(scenarios, scenario_id == focus_scenarios[2]) %>% select(scenario) %>% unlist %>% unname`
-
+Scenario: `r filter(scenarios, scenario_id == focus_scenarios[2]) %>% select(scenario_description) %>% unlist %>% unname`
 
 ```{r scenarioB_details, echo=FALSE}
 display_scenario_table(scenario_summary, focus_scenarios[2])
@@ -329,16 +354,19 @@ display filtered data. The outlier scenarios are:
 
 ```{r show_outliers}
 filter(scenario_summary, outlier == TRUE) %>% 
-  left_join(scenarios, by = c("domain_id" = "domain_id", "scenario_id" = "scenario_id")) %>% 
-  select(domain_id, scenario_id, scenario, ale_var, ale_median, ale_max) %>% 
+  left_join(scenarios, by = c("domain_id" = "domain_id", 
+                              "scenario_id" = "scenario_id")) %>% 
+  select(domain_id, scenario_id, scenario_description, ale_var, ale_median, ale_max) %>% 
   arrange(desc(ale_var)) %>% 
-  mutate(full_label = paste(domain_id, scenario_id, sep = " - ")) %>% 
+  mutate(full_label = str_glue("{domain_id} - {scenario_id}")) %>% 
   mutate_at(c("ale_var", "ale_median", "ale_max"), dollar) %>% 
-  select(full_label, scenario, ale_var, ale_median, ale_max) %>% 
-  rename("Scenario ID" = full_label, "Description" = scenario, 
+  select(full_label, scenario_description, ale_var, ale_median, ale_max) %>% 
+  rename("Scenario ID" = full_label, 
+         "Description" = scenario_description, 
          "Value at Risk" = ale_var,
-         "Median" = ale_median, "Maximum" = ale_max) %>% 
-  pander(justify=c("left", "left", rep("right", 3)))
+         "Median" = ale_median, 
+         "Maximum" = ale_max) %>% 
+  pander(justify = c("left", "left", rep("right", 3)))
 ```
 
 \newpage
@@ -354,7 +382,8 @@ each scenario.
 Risks are ranked by the economic Value at Risk (VaR). VaR is a summary 
 statistic (the 95 percentile) and should only be used to rank items at a 
 similar level of granularity. The VaR totals for domains should not be looked at 
-directly with the VaR total for the individual simulations that make up those domains.
+directly with the VaR total for the individual simulations that make up those 
+domains.
 
 ## Domains
 
@@ -380,8 +409,7 @@ ratings are used to create a distribution of simulated capability effectiveness
 over the course of a year, ranging from 100% (completely effective) to 0% 
 (completely ineffective).
 
-The full capabilities catalog, including the ratings assigned, is included as 
-[Appendix B](#capabilities_list).
+The full capabilities catalog is included as [Appendix B](#capabilities_list).
 
 ## Risk Scenarios
 
@@ -401,8 +429,8 @@ ratings to each of these frequency, strength, and loss elements.
 ## Simulation
 
 Each of the qualitative labels is mapped to a set of parameters describing a 
-beta pert distribution. These distributions are used to run `r comma(attr(simulation_results, "simulation_count"))` 
-simulations over each risk scenario. Within a given simulation, a scenario is
+beta pert distribution. These distributions are used to run 
+simulations over each risk scenario. Within a given iteration, a scenario is
 evaluated for potential losses using:
 
 1. The number of times the threat community acts against the organization.
@@ -421,74 +449,7 @@ This process generates several outputs:
 * Annual Loss Expected (ALE): The annualized sum of all individual losses.
 
 Total risk is the sum of annual expected losses across all `r nrow(scenarios)` 
-scenarios within a simulation.
-
-## Assumptions
-
-The mappings from qualitative labels to quantitative parameters is displayed 
-below.
-
-```{r, table_helper, echo=FALSE}
-create_table <- function(label, id) {
-  # pandoc.header(label, level = 3)
-  filter(mappings, type == id) %>% select(label, l, ml, h, conf) %>% 
-    rowwise() %>% 
-    mutate(label = stringi::stri_trans_totitle(label)) %>% 
-    mutate(l = ifelse(id == "lm", dollar(l), 
-                      ifelse(id == "tef", comma(l), percent(l/100)))) %>% 
-    mutate(ml = ifelse(id == "lm", dollar(ml), 
-                       ifelse(id == "tef", comma(ml), percent(ml/100)))) %>% 
-    mutate(h = ifelse(id == "lm", dollar(h), 
-                      ifelse(id == "tef", comma(h), percent(h/100)))) %>% 
-    rename("Category" = label, "Low" = l, "Most Likely" = ml, "High" = h, 
-           "Confidence" = conf) %>% 
-    pander(justify = c("left", rep("right", 4)),
-           caption = label)
-}
-```
-
-### Threat Frequencies
-
-Each threat community is assigned a frequency label. This describes how 
-often the threat community is expected to act against the organization over the 
-course of the year.
-
-```{r threat_frequencies_table}
-create_table("Threat Frequencies", "tef")
-```
-
-### Threat Capabilities
-
-The strength the threat community brings to bear against the organization within 
-a given scenario is described from a 1 to 100 scale with the following 
-qualitative labels.
-
-```{r threat_capabilities_table}
-create_table("Threat Capabilities", "tc")
-```
-
-### Control Difficulties
-
-The difficulty the organization's capabilities present against a given 
-loss scenario are converted to a common 1 to 100 scale with the following 
-qualitative labels.
-
-```{r control_difficulties_table}
-create_table("Control Difficulties", "diff")
-```
-
-### Loss Magnitudes
-
-Loss Magnitudes represent the economic impact when a loss event occurs. Types 
-of losses include fines, response costs (notification & ID theft monitoring), 
-increased audit scrutiny, restoration costs, etc. Instead of modeling different 
-loss types (formally defined as primary and secondary losses), this 
-analysis takes a simplified approach. An absolute upper bound of $4.8 
-million for any single loss event is derived from the largest known HIPAA fine.
-
-```{r loss_magnitudes_table}
-create_table("Loss Magnitudes", "lm")
-```
+scenarios within an iteration.
 
 \newpage
 # Recommendations
@@ -548,31 +509,33 @@ understand our potential economic losses?
 # Supplemental Analysis
 
 Scenarios should be treated based upon size of the value at risk (VaR) 
-calculation. Ranking scenarios by VaR creates a prioritized list of scenarios to 
-address.
+calculation. Ranking scenarios by VaR creates a prioritized list of scenarios 
+to address.
 
 ```{r scenarios_ranked_by_var_plot}
-scenario_summary %>% arrange(desc(ale_var)) %>% 
+scenario_summary %>% 
+  arrange(desc(ale_var)) %>% 
   filter(ale_var != 0) %>% 
-  mutate(scenario_label = paste0(domain_id, " - ", scenario_id)) %>% 
-  top_n(20, ale_var) %>% 
-  ggplot(., aes(x = ale_var, y = reorder(scenario_label, ale_var), 
-                color = annual_tolerance)) -> gg
-gg <- gg + geom_lollipop(horizontal = TRUE, point.size = 3)
-#gg <- gg + geom_text(aes(label = dollar_millions(ale_var)), color = "black",  hjust=0)
+  mutate(scenario_label = stringr::str_glue("{domain_id} - {scenario_id}")) %>% 
+  top_n(20, ale_var) -> scenarios_ranked_by_var
+
+gg <- ggplot(scenarios_ranked_by_var, 
+             aes(x = ale_var, 
+                 y = reorder(scenario_label, ale_var), 
+                 color = annual_tolerance))
+gg <- gg + ggalt::geom_lollipop(horizontal = TRUE, point.size = 3)
 gg <- gg + scale_x_continuous(labels = dollar_millions)
 gg <- gg + scale_color_viridis(discrete = TRUE, drop = FALSE, 
-                               breaks=c("Low", "Medium", "High"))
+                               breaks = c("Low", "Medium", "High"))
 gg <- gg + guides(color = guide_legend(title = "Risk Tolerance", 
-                                       override.aes = list(size=5)))
+                                       override.aes = list(size = 5)))
 gg <- gg + theme_evaluator(base_family = get_base_fontfamily())
 gg <- gg + theme(panel.grid.major.y = element_blank())
-gg <- gg + labs(x=NULL, y="Scenario ID",
-                title="Top Scenarios",
-                subtitle="Ranked by Value at Risk",
-                caption="Source: Evaluator toolkit")
+gg <- gg + labs(x = NULL, y = "Scenario ID",
+                title = "Top Scenarios",
+                subtitle = "Ranked by Value at Risk",
+                caption = "Source: Evaluator toolkit")
 gg
-
 ```
 
 The following figure shows each scenario's mean single loss size plotted a
@@ -580,12 +543,13 @@ gainst the median number of loss events. The size of the circle
 represents the median annual loss total for that scenario.
 
 ```{r frequency_and_impact_plot}
-gg <- ggplot(scenario_summary, aes(x = loss_events_median, y = sle_mean, 
-                                   text = scenario_id))
+gg <- ggplot(scenario_summary, 
+             aes(x = loss_events_median, y = sle_mean, text = scenario_id))
 gg <- gg + geom_point(aes(color = annual_tolerance, size = ale_median))
-gg <- gg + geom_text(aes(label=ifelse(annual_tolerance %in% c("High", "Medium"), 
-                                      paste0(domain_id, " - ", scenario_id), '')), 
-                     hjust = "right", vjust = 0.5, nudge_x = -0.35, size = 3)
+gg <- gg + geom_text(aes(
+  label = ifelse(annual_tolerance %in% c("High", "Medium"), 
+                 str_glue("{domain_id} - {scenario_id}"), '')), 
+  hjust = "right", vjust = 0.5, nudge_x = -0.35, size = 3)
 gg <- gg + labs(title = "Loss Frequency vs. Magnitude",
            subtitle = "All Scenarios",
            x = "Median Events per Year",
@@ -614,13 +578,14 @@ scenario level.
 
 The number of loss events associated with a domain is the sum of the loss 
 that occur for each scenario within the domain. To calculate domain-level loss 
-frequency, events are summed across a single simulation/scenario pairing, 
+frequency, events are summed across a single iteration/scenario pairing, 
 then re-summarized at the domain level.
 
 ```{r prepare_skewness_and_kurtosis}
-domain_loss_frequency <- simulation_results %>% group_by(domain_id, simulation) %>% 
+domain_loss_frequency <- simulation_results %>% unnest(results) %>% 
+  group_by(domain_id, iteration) %>% 
   summarize(loss_events = sum(loss_events)) %>% 
-  summarize(stats = list(describe(loss_events))) %>% unnest(stats) %>% 
+  summarize(stats = list(psych::describe(loss_events))) %>% unnest(stats) %>% 
   select(-vars)
 
 if (sum(domain_loss_frequency$skew <= 0, na.rm = TRUE) == 0) {
@@ -639,7 +604,7 @@ names(domain_loss_frequency) <- names(domain_loss_frequency) %>%
   stringi::stri_trans_totitle()
 select(domain_loss_frequency, -c(N, Trimmed, Mad, Se)) %>% 
   purrr::map_if(is.numeric, ~ round(., digits = 2)) %>% 
-  bind_cols %>% 
+  dplyr::bind_cols() %>% 
   rename(Domain = Domain_id) %>% 
   pander(caption = "Loss Events by Domain, Summary Statistics") 
 ```
@@ -649,11 +614,11 @@ domain. This graph may be used to view the relative concentration of loss events
 at a domain level. `r narrative`
 
 ```{r lef_by_domain, fig.cap="Loss Frequency by Domain"}
-simulation_results %>% group_by(domain_id, simulation) %>%
-  summarise(loss_events = sum(loss_events)) %>% 
-  ggplot(., aes(x = loss_events)) -> gg
+simulations_per_domain <- simulation_results %>% group_by(domain_id) %>% 
+  mutate(summary = map(results, summarize_iterations)) %>% 
+  unnest(summary, .drop = TRUE)
+gg <- ggplot(simulations_per_domain, aes(x = loss_events))
 gg <- gg + facet_grid(domain_id ~ ., scales = "free_y", switch = "y")
-#gg <- gg + scale_fill_viridis(discrete = TRUE)
 gg <- gg + geom_density(fill = viridis(1), alpha = 1/3)
 gg <- gg + labs(x = "Loss Events Per Year", 
                 y = element_blank(),
@@ -661,7 +626,7 @@ gg <- gg + labs(x = "Loss Events Per Year",
                 subtitle = "All Scenarios Included",
                 caption = "Source: Evaluator toolkit")
 gg <- gg + theme_evaluator(base_family = get_base_fontfamily())
-gg <- gg + theme(strip.text.y = element_text(angle = 180, hjust=0))
+gg <- gg + theme(strip.text.y = element_text(angle = 180, hjust = 0))
 gg <- gg + theme(panel.grid.major = element_blank())
 gg <- gg + theme(panel.grid.minor = element_blank())
 gg <- gg + theme(axis.ticks.y = element_blank(),
@@ -680,17 +645,19 @@ scenarios which have an average loss frequency greater than one event every
 two years.
 
 ```{r loss_events_by_scenario_table}
-loss_events_by_scenario <- simulation_results %>% group_by(scenario_id) %>% 
-  summarize(n = mean(loss_events))
-loss_events_by_scenario %>% mutate(n_zscore = round(scale(n), 2)) %>% 
+loss_events_by_scenario <- scenario_summary %>% 
+  mutate(n = loss_events_mean) %>% 
+  mutate(n_zscore = round(scale(n), 2)) %>% 
   filter(n >= 0.5 ) %>% 
-  arrange(desc(n)) %>% 
+  arrange(desc(n))
+
+loss_events_by_scenario %>% 
   select("Loss Events" = n, scenario_id, "Z-Score" = n_zscore) %>% 
   left_join(scenarios, by = c("scenario_id" = "scenario_id")) %>% 
-  mutate("Scenario ID" = paste0(domain_id, " - ", scenario_id),
+  mutate("Scenario ID" = str_glue("{domain_id} - {scenario_id}"),
          "Mean Loss Events" = comma(round(`Loss Events`))) %>% 
-  select(`Scenario ID`, Scenario = scenario, `Mean Loss Events`, `Z-Score`) %>% 
-  pander(justify=c("left", "left", "right", "right"), 
+  select(`Scenario ID`, Scenario = scenario_description, `Mean Loss Events`, `Z-Score`) %>% 
+  pander(justify = c("left", "left", "right", "right"), 
          emphasize.strong.rows = which(.$`Z-Score` > 2), 
          caption = "Scenario Mean Loss Frequency")
 ```
@@ -726,7 +693,7 @@ plot_scenarios_by_domain <- function(x) {
   gg
 }
 
-simulation_results %>% 
+simulation_results %>% unnest(results, .drop = TRUE) %>% 
   filter(loss_events > 1) %>% 
   mutate(scenario_id = factor(as.character(scenario_id), 
                               levels = scenario_order$scenario_id)) %>%
@@ -743,9 +710,11 @@ where losses occur.
 # previous iterations only excluded scenarios with zero losses across all sims
 #gg <- results %>% group_by(scenario_id) %>% filter(sum(ale) > 0) %>% 
 
-gg <- simulation_results %>% filter(ale > 0) %>% 
+gg <- simulation_results %>% unnest(results) %>% 
+  filter(ale > 0) %>% 
   ggplot(., aes(x = as.character(scenario_id), y = ale))
-gg <- gg + facet_wrap(~domain_id, ncol = 4, scales = "free", strip.position = "top")
+gg <- gg + facet_wrap(vars(domain_id), ncol = 4, scales = "free", 
+                      strip.position = "top")
 gg <- gg + stat_boxplot(geom = 'errorbar', width = 0.5)
 gg <- gg + geom_boxplot(fill = viridis(1), alpha = 1/3,
                         outlier.color = viridis(1), outlier.alpha = 1/3, 
@@ -781,15 +750,17 @@ This figure shows the range of expected annual losses by domain.
 ```{r risk_by_domain, fig.cap="Risk by Domain"}
 test_position <- domain_summary[[nrow(domain_summary), "domain_id"]]
 
+flat_simulation_results <- unnest(simulation_results, results)
+
 # plot of all ales
-gg <- ggplot(simulation_results, aes(x = domain_id, y = ale + 1))
-if (max(simulation_results$ale) >= risk_tolerance["high"] * .9) {
+gg <- ggplot(flat_simulation_results, aes(x = domain_id, y = ale + 1))
+if (max(flat_simulation_results$ale) >= risk_tolerance["high"] * .9) {
   gg <- gg + geom_hline(aes(yintercept = risk_tolerance["high"]), 
                         color = "red") +
     annotate("text", x = test_position, y = risk_tolerance["high"], 
              label = "High", vjust = "bottom", hjust = "right")
 }
-if (max(simulation_results$ale) >= risk_tolerance["medium"] * .9) {
+if (max(flat_simulation_results$ale) >= risk_tolerance["medium"] * .9) {
   gg <- gg + geom_hline(aes(yintercept = risk_tolerance["medium"]), 
                         color = "lightsteelblue") +
     annotate("text", x = test_position, y = risk_tolerance["medium"], 
@@ -799,8 +770,6 @@ gg <- gg + stat_boxplot(geom = 'errorbar', width = 0.5)
 gg <- gg + geom_boxplot(fill = viridis(1), alpha = 1/5,
                         outlier.color = "black", outlier.alpha = 1/2,
                         outlier.shape = 16)
-#gg <- gg + geom_boxplot(aes(fill = domain_id), alpha = 1/5, outlier.shape = NA)
-#gg <- gg + geom_violin(fill = viridis(1), alpha = 1/5)
 gg <- gg + scale_y_continuous(labels = dollar_millions)
 gg <- gg + labs(x = "Domain", y = "Annual Loss Exposure",
                 title = "Range of Annual Losses by Domain",
@@ -822,21 +791,18 @@ scenarios.
 ```{r risk_for_outlier_domains, fig.cap="Risk for Outliers"}
 # box plot for the outlier domains
 outlier_domains <- scenario_summary %>% 
-  filter(scenario_id %in% scenario_outliers) %>% group_by(domain_id) %>% 
+  filter(scenario_id %in% scenario_outliers) %>%
+  group_by(domain_id) %>% 
   summarise() %>% ungroup()
 
-#test_position <- tail(outlier_domains, n = 1) %>% select(domain_id) %>% unlist %>% unname
-#test_position <- outlier_domains$domain_id
-dat <- simulation_results %>% filter(domain_id %in% outlier_domains$domain_id) %>% 
-  mutate(full_label = paste0(domain_id, " - ", scenario_id)) %>% 
+dat <- unnest(simulation_results, results) %>% filter(domain_id %in% outlier_domains$domain_id) %>% 
+  mutate(full_label = str_glue("{domain_id} - {scenario_id}")) %>% 
   arrange(full_label)
 test_position <- tail(dat, n = 1) %>% select(full_label) %>% unlist %>% unname
 
 gg <- ggplot(dat, aes(x = full_label, y = ale))
-#gg <- gg + facet_grid(. ~ domain_id, scales = "free_x", switch = "x")
 gg <- gg + stat_boxplot(geom = 'errorbar', width = 0.5)
 gg <- gg + geom_boxplot(aes(fill = domain_id), alpha = 1/5)
-#gg <- gg + geom_boxplot(aes(fill = domain_id), alpha = 1/5, outlier.shape = NA)
 if (max(dat$ale) >= risk_tolerance["high"] * .9) {
     gg <- gg + geom_hline(aes(yintercept = risk_tolerance["high"]), color = "red") +
       annotate("text", x = test_position, y = risk_tolerance["high"], 
@@ -871,7 +837,7 @@ Repeating the above plot across all the scenarios with the outliers removed
 allows examination of the remaining scenarios without distortion. 
 
 ```{r annual_loss_no_outliers, fig.cap="Annual Loss Excluding Outliers"}
-gg <- simulation_results %>% filter(!scenario_id %in% scenario_outliers) %>% 
+gg <- unnest(simulation_results, results) %>% filter(!scenario_id %in% scenario_outliers) %>% 
   mutate(scenario_id = factor(as.character(scenario_id), 
                               levels = as.character(scenario_order$scenario_id))) %>% 
   arrange(domain_id, scenario_id) %>% ggplot(., aes(x = scenario_id, y = ale))
@@ -903,7 +869,7 @@ median ALE measure as an alternative.
 
 ```{r var_vs_median_plot, fig.cap="VaR vs. Median"}
 # prepare data and init graph
-simulation_results %>% group_by(scenario_id, simulation) %>% 
+simulation_results %>% unnest(results) %>% group_by(scenario_id, iteration) %>% 
   summarize(ale = sum(ale)) %>% 
   filter(ale > 0) %>% 
   summarize(var = quantile(ale, 0.95), median = median(ale)) %>% 
@@ -915,16 +881,13 @@ measure_names <- c(
 )
 
 gg <- ggplot(dat, aes(value))
-
-# graph options
 gg <- gg + geom_histogram(binwidth = max(gg$data$value) / 50, 
                           aes(y = ..density..),
                           color = "black", fill = viridis(2)[1], alpha = 1/5)
-gg <- gg + geom_density(fill=viridis(2)[2], alpha = 1/5)
-gg <- gg + facet_wrap(~measure, nrow=2, scales = "free_x", strip.position = "left", 
+gg <- gg + geom_density(fill = viridis(2)[2], alpha = 1/5)
+gg <- gg + facet_wrap(vars(measure), nrow = 2, scales = "free_x", strip.position = "left", 
                       labeller = as_labeller(measure_names))
 gg <- gg + scale_x_continuous(labels = dollar_millions)
-#gg <- gg + scale_y_continuous(labels = comma)
 gg <- gg + labs(x = "Loss Size", y = element_blank(), 
                 title = "Scenario Level Losses",
                 subtitle = "Median vs. Value at Risk Measures",
@@ -946,14 +909,13 @@ While the single control may be effective against the threat community, these
 scenarios should be reviewed to see if additional controls are warranted.
 
 ```{r fragile_scenarios}
-scenarios %>% left_join(domains, by = c("domain_id" = "domain_id")) %>% 
-  rowwise %>% 
-  mutate(n_controls = length(stringi::stri_split_fixed(controls, ", ")[[1]])) %>%
+scenarios %>% left_join(domains, by = c("domain_id" = "domain_id")) %>%  
+  mutate(n_controls  = map_dbl(scenario, ~length(.x$parameters$diff))) %>% 
   filter(n_controls == 1) %>% 
   arrange(domain_id, scenario_id) %>% 
-  mutate("Domain" = paste0(domain, " (", domain_id, ")")) %>% 
+  mutate("Domain" = str_glue("{domain} ({domain_id})")) %>% 
   select(Domain, "Scenario ID" = scenario_id, 
-         Scenario = scenario) %>% 
+         Scenario = scenario_description) %>% 
   pander(justify = c("left", "left", "left"), 
                  split.cells = c(35, 15, 40), 
                  caption = "Fragile Scenarios")
@@ -967,26 +929,23 @@ Supplemental details are included as appendices.
 ## Appendix A {#scenario_list}
 
 ```{r scenario_table}
-arrange(qualitative_scenarios, domain_id, scenario_id) %>% 
-  mutate(scenario_id = paste(domain_id, scenario_id, sep = " - "), 
-         tef = stringi::stri_trans_totitle(tef),
-         lm = stringi::stri_trans_totitle(lm)) %>% 
-  select("Scenario ID" = scenario_id, "Scenario" = scenario, 
-         "Threat Community" = tcomm, "Action Frequency" = tef, "Impact" = lm) %>% 
+arrange(scenarios, domain_id, scenario_id) %>% 
+  mutate(scenario_id = stringr::str_glue("{domain_id} - {scenario_id}")) %>%  
+  select("Scenario ID" = scenario_id, "Scenario" = scenario_description) %>% 
   pander(caption = "All Scenarios", justify = "left", 
-         split.cells = c(12, 35, 20, 10, 10))
+         split.cells = c(12, 35))
 ```
 
 ## Appendix B {#scenario_results}
 
 ```{r risk_list, echo=FALSE}
-left_join(qualitative_scenarios, scenario_summary, by = c("scenario_id" = "scenario_id",
-                                            "domain_id" = "domain_id")) %>% 
+left_join(scenarios, scenario_summary,
+          by = c("scenario_id" = "scenario_id", "domain_id" = "domain_id")) %>% 
   arrange(desc(ale_median), desc(ale_var)) %>% 
-  mutate_at(vars("ale_median", "ale_var"), funs(dollar)) %>% 
-  mutate("Domain" = paste(domain_id, scenario_id, sep = " - ")) %>% 
+  mutate_at(vars("ale_median", "ale_var"), scales::dollar) %>% 
+  mutate("Domain" = str_glue("{domain_id} - {scenario_id}")) %>% 
   select(Domain,
-         "Scenario" = scenario, 
+         "Scenario" = scenario_description, 
          "Median Annual Loss" = ale_median, 
          "Value at Risk" = ale_var) %>% 
   pander(split.cells = c(10, 40, 12, 12), 
@@ -1000,9 +959,7 @@ left_join(qualitative_scenarios, scenario_summary, by = c("scenario_id" = "scena
 ```{r capabilities_table}
 capabilities %>% 
   arrange(domain_id, capability_id) %>%
-  select("Domain ID" = domain_id, "Capability" = capability, 
-         "Maturity" = diff) %>%
-  pander(caption = "Capability Listing", split.cells = c(10, 40, 15), 
-         justify = c('left', 'left', 'left'))
-
+  select("Domain ID" = domain_id, "Capability" = capability) %>%
+  pander(caption = "Capability Listing", split.cells = c(10, 50), 
+         justify = c('left', 'left'))
 ```

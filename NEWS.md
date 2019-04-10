@@ -1,3 +1,88 @@
+# evaluator 0.4.0
+
+This release includes a greatly improved flow when starting directly from 
+quantitative inputs. In addition to the spreadsheet importing flow, 
+users have the option to start with quantitative inputs and leverage the new 
+`tidyrisk_scenario` objects to move directly to simulation. Users with 
+quantitative flows may also use [collector](https://collector.tidyrisk.org) to 
+work with their quantitative data.
+
+## New Feature
+* `read_qualitative_inputs()` pulls in all qualitative inputs.
+* `tidyrisk_scenario` object for containing the elements of a risk scenario 
+  for simulation.
+  - A RStudio Add-in for creating a skeleton `tidyrisk_scenario` object is 
+  available.
+* `summarize_scenario()` function creates summary for a single scenario's results. 
+  - `summarize_scenarios()` is now a wrapper around `summarize_scenario()`
+* An alternative model `openfair_tef_tc_diff_plm_sr()` is now available for 
+  simulating scenarios with secondary loss risk.
+* `loss_scatterplot()` generates a scatterplot of total loss exposure vs. 
+  number of loss events for a single scenario.
+* `exposure_histogram()` generates a histogram of losses for a single scenario, 
+  optionally displaying the 95% value at risk level.
+* `loss_exceedance_curve()` generates a loss exceedance curve for one or 
+  more simulations summarized at the iteration level.
+
+## Improvements
+* Massive speed fix for a slow down that has been present since the v0.2.x 
+  series. Initial testing shows improvements of up to 700% when running 
+  simulations!
+* Summary statistics for mean TC and DIFF exceedance now properly handle 
+  extreme situations where 100% of threat events are either resisted or 
+  become loss events.
+* All percentages are consistently imported, stored, and processed as 
+  decimal values (from 0 - 1). This makes the TC and DIFF parameters use the 
+  same scale as VULN.
+  * As a side benefit, the restrictions on the format of the mappings CSV are 
+  relaxed. Doubles (decimals) are now permitted in the low, most likely, and 
+  high columns.
+  * The custom percent format function in the default Risk Report is removed 
+  and functionality is now provided via `scales::percent()`.
+* Scenario Explorer application now can be used when skipping qualitative 
+  data and starting directly from quantitative data.
+* Risk Report can now be used when skipping qualitative data and starting 
+  directly from quantitative data.
+* The risk report and risk dashboard now use the same metric for minimum 
+  expected losses. The previous value reported on the dashboard was incorrect.
+* `select_loss_events()` now returns zeros when there are zero threat events in 
+  a given period. Previously this function returned NA which could potentially 
+  cause issues in reporting.
+* Updated the default sample mapping files to reference the current maximum 
+  OCR fine (SLE), from the 2015 Anthem breach.
+* All save and load functions consistently use rds formatted files instead 
+  of a mix of rda/rds.
+* Removed all remaining uses to SE forms of dplyr verbs.
+* Removed use of soft deprecated ggplot `aes_()` functions.
+* Clean up CSS for HTML reports, improving style consistency, particularly 
+  around font families.
+* Increase test coverage, including moving more shinytest tests to run on CI 
+  instances and package spelling tests.
+* The internal contract between `run_simulation()` and modeling functions 
+  such as `openfair_tef_tc_diff_lm()` is established. `run_simulation()` 
+  will always confirm a scenario object has all of the OpenFAIR components 
+  needed by the specified modeling function. This enables easier extension of 
+  Evaluator to new models.
+* `openfair_example()` uses (at last!) the same simulation engine as 
+  `run_simulation()`. This provides more consistent results, less code to 
+  maintain, and opens this demo app to displaying more metrics that are native 
+  to evaluator. A very initial pass to this last point has implemented.
+  
+## Other Changes
+* `generate_scatterplot()` is deprecated in favor of the new 
+  `loss_scatterplot()` function.
+* Switched the base font for the Risk Report to Open Sans, retaining the 
+  Condensed version for headers.
+* Renamed the default sample dataset to the hypothetical MetroCare Hospital. 
+  The default sets now all consistently use the `mc_` prefix to distinguish 
+  them from parameter names.
+* Deprecated `load_data()`. Use `read_qualitative_inputs()` or 
+  `read_quantitative_inputs()` as appropriate.
+* Re-export the pipe operator `%>%`
+* Rename `simulation` column to `iteration` to be more consistent with general 
+  MC uses.
+* Move from soft-deprecated `purrr::invoke()` to `rlang::eval()`.
+
 # evaluator 0.3.2
 
 ## Improvements

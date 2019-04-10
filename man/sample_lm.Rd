@@ -4,12 +4,14 @@
 \alias{sample_lm}
 \title{Given a number of loss events and a loss distribution, calculate losses}
 \usage{
-sample_lm(func = NULL, params = NULL)
+sample_lm(n, .func = NULL, params = NULL)
 }
 \arguments{
-\item{func}{Function to use to simulate TEF, defaults to \code{\link[mc2d]{rpert}}.}
+\item{n}{Number of samples to generate.}
 
-\item{params}{Optional parameters to pass to \code{func}.}
+\item{.func}{Function to use to simulate TEF, defaults to \code{\link[mc2d]{rpert}}.}
+
+\item{params}{Optional parameters to pass to \code{.func}.}
 }
 \value{
 List containing type ("lm"), samples (as a vector), and details (as a list).
@@ -22,8 +24,7 @@ Other OpenFAIR helpers: \code{\link{compare_tef_vuln}},
   \code{\link{get_mean_control_strength}},
   \code{\link{openfair_tef_tc_diff_lm}},
   \code{\link{sample_diff}}, \code{\link{sample_lef}},
-  \code{\link{sample_tc}}, \code{\link{sample_tef}},
-  \code{\link{sample_vuln}},
+  \code{\link{sample_tc}}, \code{\link{sample_vuln}},
   \code{\link{select_loss_opportunities}}
 }
 \concept{OpenFAIR helpers}

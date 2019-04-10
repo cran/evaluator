@@ -6,7 +6,8 @@
 \usage{
 generate_report(input_directory = "~/evaluator/inputs",
   results_directory = "~/evaluator/results", output_file,
-  styles = NULL, focus_scenario_ids = c(51, 12), format = "html",
+  styles = NULL, include_header = NULL,
+  focus_scenario_ids = c("RS-51", "RS-12"), format = "html",
   intermediates_dir = tempdir(), quiet = TRUE, ...)
 }
 \arguments{
@@ -18,13 +19,15 @@ generate_report(input_directory = "~/evaluator/inputs",
 
 \item{styles}{Optional full path to CSS file to override default styles.}
 
+\item{include_header}{Optional full path to HTML to include in the HEAD section (HTML formats only).}
+
 \item{focus_scenario_ids}{IDs of scenarios of special interest.}
 
 \item{format}{Format to generate (html, pdf, word).}
 
 \item{intermediates_dir}{Location for intermediate knit files.}
 
-\item{quiet}{TRUE to suppress printing of pandoc output.}
+\item{quiet}{\code{TRUE} to suppress printing of pandoc output.}
 
 \item{...}{Any other parameters to pass straight to \code{rmarkdown::render}.}
 }

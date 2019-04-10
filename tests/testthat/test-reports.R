@@ -5,29 +5,27 @@ dir.create(tmpdata)
 tmpinputs <- file.path(tmpdir, "inputs")
 dir.create(tmpinputs, showWarnings = FALSE)
 
-data("simulation_results", package = "evaluator", envir = environment())
-saveRDS(simulation_results, file = file.path(tmpdata, "simulation_results.Rds"))
-data("scenario_summary", package = "evaluator", envir = environment())
-save(scenario_summary, file = file.path(tmpdata, "scenario_summary.rda"))
-data("domain_summary", package = "evaluator", envir = environment())
-save(domain_summary, file = file.path(tmpdata, "domain_summary.rda"))
+data("mc_simulation_results", package = "evaluator", envir = environment())
+saveRDS(mc_simulation_results, file = file.path(tmpdata, "simulation_results.rds"))
+data("mc_scenario_summary", package = "evaluator", envir = environment())
+saveRDS(mc_scenario_summary, file = file.path(tmpdata, "scenario_summary.rds"))
+data("mc_domain_summary", package = "evaluator", envir = environment())
+saveRDS(mc_domain_summary, file = file.path(tmpdata, "domain_summary.rds"))
 
 res <- c("domains.csv", "qualitative_mappings.csv", "risk_tolerances.csv") %>%
   purrr::map(~ file.copy(system.file("extdata", .x, package = "evaluator"),
                          tmpinputs))
-data("capabilities", envir = environment())
-readr::write_csv(capabilities, file.path(tmpinputs, "capabilities.csv"))
-data("qualitative_scenarios", envir = environment())
-readr::write_csv(qualitative_scenarios, file.path(tmpinputs, "qualitative_scenarios.csv"))
-data("quantitative_scenarios", envir = environment())
-saveRDS(quantitative_scenarios, file.path(tmpinputs, "quantitative_scenarios.Rds"))
+data("mc_qualitative_scenarios", envir = environment())
+readr::write_csv(mc_qualitative_scenarios, file.path(tmpinputs, "qualitative_scenarios.csv"))
+data("mc_quantitative_scenarios", envir = environment())
+saveRDS(mc_quantitative_scenarios, file.path(tmpinputs, "quantitative_scenarios.rds"))
 
 
 test_that("Analyze report renders", {
 
   skip_if_not(rmarkdown::pandoc_available(),
               message = "Cannot test report generation without pandoc available.")
-  purrr::walk(c("psych", "pander", "purrrlyr", "ggalt", "rmarkdown"),
+  purrr::walk(c("psych", "pander", "ggalt", "rmarkdown"),
               ~ skip_if_not_installed(.))
 
   file <- tempfile(fileext = ".html")
@@ -39,19 +37,6 @@ test_that("Analyze report renders", {
   expect_equivalent(normalizePath(result$result), normalizePath(file))
   unlink(file)
 })
-
-
-# test_that("Scenario Explorer launches", {
-#   expect_is(explore_scenarios(input_directory = tmpinputs,
-#                               results_directory = tmpdata,
-#                               shiny_args = list(launch.browser = FALSE)),
-#                               "shiny.appobj")
-# })
-
-# test_that("OpenFAIR Example launches", {
-#   expect_is(openfair_example(shiny_args = list(launch.browser = FALSE)),
-#             "shiny.appobj")
-# })
 
 test_that("Risk Dashboard renders", {
 

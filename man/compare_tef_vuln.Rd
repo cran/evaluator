@@ -4,12 +4,14 @@
 \alias{compare_tef_vuln}
 \title{Calculate number of loss events which occur in a simulated period}
 \usage{
-compare_tef_vuln(tef, vuln)
+compare_tef_vuln(tef, vuln, n = NULL)
 }
 \arguments{
 \item{tef}{Threat event frequency (n).}
 
 \item{vuln}{Vulnerability (percentage).}
+
+\item{n}{Number of samples to generate.}
 }
 \value{
 List containing samples (as a vector) and details (as a list).
@@ -27,7 +29,7 @@ Other OpenFAIR helpers: \code{\link{get_mean_control_strength}},
   \code{\link{openfair_tef_tc_diff_lm}},
   \code{\link{sample_diff}}, \code{\link{sample_lef}},
   \code{\link{sample_lm}}, \code{\link{sample_tc}},
-  \code{\link{sample_tef}}, \code{\link{sample_vuln}},
+  \code{\link{sample_vuln}},
   \code{\link{select_loss_opportunities}}
 }
 \concept{OpenFAIR helpers}

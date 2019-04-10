@@ -4,15 +4,18 @@
 \alias{openfair_tef_tc_diff_lm}
 \title{Run an OpenFAIR simulation at the TEF/TC/DIFF/LM levels}
 \usage{
-openfair_tef_tc_diff_lm(scenario, n = 10^4, title = "Untitled",
-  verbose = FALSE)
+openfair_tef_tc_diff_lm(tef, tc, diff, lm, n = 10^4, verbose = FALSE)
 }
 \arguments{
-\item{scenario}{List of TEF, TC, and LM parameters.}
+\item{tef}{Parameters for TEF simulation}
 
-\item{n}{Number of simulations to run.}
+\item{tc}{Parameters for TC simulation}
 
-\item{title}{Optional name of scenario.}
+\item{diff}{Parameters for DIFF simulation}
+
+\item{lm}{Parameters for LM simulation}
+
+\item{n}{Number of iterations to run.}
 
 \item{verbose}{Whether to print progress indicators.}
 }
@@ -22,21 +25,21 @@ mean TC and DIFF exceedance, and ALE samples.
 }
 \description{
 Run an OpenFAIR model with parameters provided for TEF, TC, DIFF, and
-LM sampling. If there are multiple controls provided for a scenarios, the
+LM sampling. If there are multiple controls provided for the scenario, the
 arithmetic mean (average) is taken across samples for all controls to get
-the effective control strength for a given simulation.
+the effective control strength for each threat event.
 }
 \examples{
-data(quantitative_scenarios)
-scenario <- quantitative_scenarios[1, ]
-openfair_tef_tc_diff_lm(scenario, 10)
+data(mc_quantitative_scenarios)
+params <- mc_quantitative_scenarios[[1, "scenario"]]$parameters
+openfair_tef_tc_diff_lm(params$tef, params$tc, params$diff, params$lm, 10)
 }
 \seealso{
 Other OpenFAIR helpers: \code{\link{compare_tef_vuln}},
   \code{\link{get_mean_control_strength}},
   \code{\link{sample_diff}}, \code{\link{sample_lef}},
   \code{\link{sample_lm}}, \code{\link{sample_tc}},
-  \code{\link{sample_tef}}, \code{\link{sample_vuln}},
+  \code{\link{sample_vuln}},
   \code{\link{select_loss_opportunities}}
 }
 \concept{OpenFAIR helpers}

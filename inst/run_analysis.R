@@ -1,5 +1,5 @@
 # Quick Start script for Evaluator workflow
-# Process documented at https://evaluator.severski.net/articles/usage.html
+# Process documented at https://evaluator.tidyrisk.org/articles/usage.html
 
 # This script is intended as a starting point for taking a directory of
 # inputs as created by evaluator::create_templates(), running simulations,
@@ -13,6 +13,12 @@
 
 # Setup -------------------------------------------------------------------
 library(evaluator)
+library(readr)
+library(purrr)
+library(dplyr)
+library(furrr)
+plan(multiprocess)
+
 if (!exists("base_dir") || !dir.exists(base_dir)) {
   stop("Set base_dir to your evaluator working directory before running this script.")
 }
@@ -26,37 +32,34 @@ message("Beginning analysis run with input directory (", inputs_dir, ")",
 # Load and Validate -------------------------------------------------------
 message("Loading and validating inputs...")
 
-domains <- readr::read_csv(file.path(inputs_dir, "domains.csv"),
-                           col_types = readr::cols(.default = readr::col_character()))
+domains <- read_csv(file.path(inputs_dir, "domains.csv"),
+                    col_types = cols(.default = col_character()))
 import_spreadsheet(file.path(inputs_dir, "survey.xlsx"), domains, inputs_dir)
 
-qualitative_scenarios <- readr::read_csv(file.path(inputs_dir,
-                                                   "qualitative_scenarios.csv"),
-                                         col_types = readr::cols(.default = readr::col_character()))
-mappings <- readr::read_csv(file.path(inputs_dir, "qualitative_mappings.csv"),
-                            col_types = readr::cols(.default = readr::col_integer(),
-                                             type = readr::col_character(),
-                                             label = readr::col_character(),
-                                             ml = readr::col_double()))
-capabilities <- readr::read_csv(file.path(inputs_dir, "capabilities.csv"),
-                                col_types = readr::cols(.default = readr::col_character()))
+qual_inputs <- read_qualitative_inputs(inputs_dir)
+qualitative_scenarios <- qual_inputs$qualitative_scenarios
+mappings <- qual_inputs$mappings
+capabilities <- qual_inputs$capabilities
 validate_scenarios(qualitative_scenarios, capabilities, domains, mappings)
 
 # Encode ------------------------------------------------------------------
 message("Encoding qualitative scenarios...")
 quantitative_scenarios <- encode_scenarios(qualitative_scenarios, capabilities,
                                            mappings)
+saveRDS(quantitative_scenarios,
+        file = file.path(inputs_dir, "quantitative_scenarios.rds"))
 
 # Simulate ----------------------------------------------------------------
 message("Running simulations...")
-simulation_results <- run_simulations(quantitative_scenarios,
-                                      simulation_count = 10000L)
-save(simulation_results, file = file.path(results_dir, "simulation_results.rda"))
+simulation_results <- quantitative_scenarios %>%
+  mutate(results = furrr::future_map(scenario, run_simulation,
+                                     iterations = 10000L, .progress = TRUE)) %>%
+  select(-c(scenario, tcomm, scenario_description), scenario_id, domain_id, results)
+saveRDS(simulation_results, file = file.path(results_dir, "simulation_results.rds"))
 
 # Summarize ---------------------------------------------------------------
 message("Summarizing results...")
-summarize_to_disk(simulation_results = simulation_results,
-                  domains = domains, results_dir)
+summarize_to_disk(simulation_results = simulation_results, results_dir)
 
 # Report ---------------------------------------------------------------
 message("Generating reports...")

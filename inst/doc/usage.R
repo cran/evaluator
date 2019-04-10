@@ -23,30 +23,33 @@ library(pander)
 
 ## ----simulate, eval = FALSE----------------------------------------------
 #  simulation_results <- run_simulations(quantitative_scenarios,
-#                                        simulation_count = 100L)
-#  save(simulation_results, file = "~/evaluator/results/simulation_results.rda")
+#                                        iterations = 100L)
+#  saveRDS(simulation_results, file = "~/evaluator/results/simulation_results.rds")
 
 ## ----summarize, eval=FALSE-----------------------------------------------
-#  summarize_to_disk(simulation_results = simulation_results, domains = domains,
+#  summarize_to_disk(simulation_results = simulation_results,
 #                    results_dir = "~/evaluator/results")
 
 ## ----data_files, eval = TRUE, echo=FALSE---------------------------------
 tibble::tribble(
     ~"Data File", ~Purpose,
-    "simulation_results.rda", "Full details of each simulated scenario",
-    "scenario_summary.rda", "Simulation results, summarized at the scenario level",
-    "domain_summary.rda", "Simulation results, summarized at the domain level"
+    "simulation_results.rds", "Full details of each simulated scenario",
+    "scenario_summary.rds", "Simulation results, summarized at the scenario level",
+    "domain_summary.rds", "Simulation results, summarized at the domain level"
 ) %>% pander::pander(., justify = "left")
 
 ## ----analyze, eval=FALSE-------------------------------------------------
 #  # Explorer
-#  explore_scenarios("~/evaluator/inputs", "~/evaluator/results")
+#  explore_scenarios(input_directory = "~/evaluator/inputs",
+#                    results_directory = "~/evaluator/results")
 #  
 #  # Risk Dashboard
-#  risk_dashboard("~/evaluator/inputs", "~/evaluator/results",
+#  risk_dashboard(input_directory = "~/evaluator/inputs",
+#                 output_directory = "~/evaluator/results",
 #                 "~/evaluator/risk_dashboard.html")
 #  
 #  # Sample Report
-#  generate_report("~/evaluator/inputs", "~/evaluator/results",
+#  generate_report(input_directory = "~/evaluator/inputs",
+#                  results_directory = "~/evaluator/results",
 #                  "~/evaluator/risk_report.html") %>% rstudioapi::viewer()
 

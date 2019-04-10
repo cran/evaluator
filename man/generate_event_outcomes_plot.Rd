@@ -5,13 +5,15 @@
 \title{Display the distribution of threat events contained vs. realized across
 all domains}
 \usage{
-generate_event_outcomes_plot(domain_summary)
+generate_event_outcomes_plot(domain_summary, domain_id = domain_id)
 }
 \arguments{
 \item{domain_summary}{Domain-level summary from \code{domain_summary}.}
+
+\item{domain_id}{Variable to group plot by.}
 }
 \value{
-ggplot object.
+A ggplot object.
 }
 \description{
 Creates a barbell plot showing the number and percentage of events
@@ -19,6 +21,14 @@ contained (not resulting in loss) vs the number and percentage of
 loss events (threat events resulting in losses).
 }
 \examples{
-data(domain_summary)
-generate_event_outcomes_plot(domain_summary)
+data(mc_domain_summary)
+generate_event_outcomes_plot(mc_domain_summary)
 }
+\seealso{
+Other result graphs: \code{\link{exposure_histogram}},
+  \code{\link{generate_heatmap}},
+  \code{\link{generate_scatterplot-deprecated}},
+  \code{\link{loss_exceedance_curve}},
+  \code{\link{loss_scatterplot}}
+}
+\concept{result graphs}

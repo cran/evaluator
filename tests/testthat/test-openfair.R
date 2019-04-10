@@ -1,6 +1,10 @@
+
+# Factor Sampling ---------------------------------------------------------
+
+
 test_that("Sample TEF", {
   set.seed(1234)
-  tef <- sample_tef(params = list(n=10, 1, 10, 100))
+  tef <- sample_tef(n = 10, params = list(1, 10, 100))
   expect_is(tef, "list")
   # ensure that the list has the required elements
   expect_equal(names(tef), c("type", "samples", "details"))
@@ -16,7 +20,7 @@ test_that("Sample TEF", {
 context("Sample DIFF")
 test_that("Sample DIFF", {
   set.seed(1234)
-  dat <- sample_diff(params = list(n=10, 50, 70, 75, 3))
+  dat <- sample_diff(n = 10, params = list(50, 70, 75, 3))
   expect_is(dat, "list")
   # ensure that the list has the required elements
   expect_equal(names(dat), c("type", "samples", "details"))
@@ -30,14 +34,34 @@ test_that("Sample DIFF", {
                         71.4683219144408), digits = 4))
 })
 test_that("Multi control diff works", {
-  diff_estimates <- data.frame(l = c(1, 2), ml = c(10, 15), h = c(20, 100),
-                               conf = c(1, 3))
+  set.seed(1234)
+  diff_estimates <- list(list(min = 1, mode = 10, max = 20, shape = 1),
+                         list(min =  2, mode = 15, max = 100, shape = 3))
+  dat <- map(diff_estimates, ~sample_diff(n = 10, params = .x))
+  expect_is(dat, "list")
+  # ensure that we received two responses back
+  expect_equal(length(dat), 2)
+  # ensure that each list has the required elements
+  expect_equal(names(dat[[1]]), c("type", "samples", "details"))
+  expect_equal(names(dat[[2]]), c("type", "samples", "details"))
+  # ensure that the samples matches the number requested
+  expect_equal(length(map(dat, "samples") %>% purrr::as_vector()), 20)
+  # ensure that values of samples is correct
+  expect_equal(signif(map(dat, "samples") %>% purrr::as_vector(), digits = 4),
+               signif(c(3.90393636733577, 12.0433334741972, 16.4016497257758,
+                        1.40316316329966, 12.9556613644064, 13.407051718503,
+                        6.90857118330148, 7.06525326308045, 6.96573684805713,
+                        5.27395602706608, 19.325236233819, 11.5371092097717,
+                        14.4718568402617, 30.9888681331648, 57.8265729409247,
+                        26.8078941229072, 18.7219717579054, 12.6241144280687,
+                        13.6123515927865, 32.76590164781
+               ), digits = 4))
 })
 
 context("Sample TC")
 test_that("Sample TC", {
   set.seed(1234)
-  tc <- sample_tc(params = list(n=10, 50, 75, 100, 4))
+  tc <- sample_tc(n = 10, params = list(50, 75, 100, 4))
   expect_is(tc, "list")
   # ensure that the list has the required elements
   expect_equal(names(tc), c("type", "samples", "details"))
@@ -52,17 +76,19 @@ test_that("Sample TC", {
 })
 
 context("Select Loss Opportunities")
-test_that("Mean Difficulty Exceedance works when there are zero losses", {
+test_that("Select loss opportunites handles iterations with zero loss events", {
   threat_strengths <- c(0.2, 0.3, 0.4)
   diff_strengths   <- c(0.3, 0.4, 0.5)
   dat <- select_loss_opportunities(threat_strengths, diff_strengths)
   expect_equal(dat$details$mean_diff_exceedance, 0.1)
+  expect_equal(all(is.logical(dat$samples)), TRUE)
+  expect_equal(sum(dat$samples), 0)
 })
 
 context("Sample VULN")
 test_that("Sample VULN works with binom", {
   set.seed(1234)
-  dat <- sample_vuln(params = list(n=10, 1, .5))
+  dat <- sample_vuln(n = 10, params = list(1, .5))
   expect_is(dat, "list")
   # ensure that the list has the required elements
   expect_equal(names(dat), c("type", "samples", "details"))
@@ -73,9 +99,9 @@ test_that("Sample VULN works with binom", {
 })
 test_that("Sample VULN works with TC and DIFF", {
   set.seed(1234)
-  tc <- sample_tc(params = list(n=10, 50, 70, 85, 2))$samples
-  diff <- sample_diff(params = list(n=10, 50, 70, 85, 2))$samples
-  dat <- sample_vuln(func = "evaluator::select_loss_opportunities", params = list(tc = tc, diff = diff))
+  tc <- sample_tc(n = 10, params = list(50, 70, 85, 2))$samples
+  diff <- sample_diff(n = 10, params = list(50, 70, 85, 2))$samples
+  dat <- sample_vuln(n = 10, .func = "evaluator::select_loss_opportunities", params = list(tc = tc, diff = diff))
   expect_is(dat, "list")
   # ensure that the list has the required elements
   expect_equivalent(names(dat), c("type", "samples", "details"))
@@ -91,8 +117,8 @@ test_that("Sample VULN works with TC and DIFF", {
 test_that("TC and DIFF exceedance handles NA threat events", {
   set.seed(1234)
   tc <- c(NA)
-  diff <- sample_diff(params = list(n=2, 50, 70, 85, 2))$samples
-  dat <- sample_vuln(func = "evaluator::select_loss_opportunities", params = list(tc = tc, diff = diff))
+  diff <- sample_diff(n = 2, params = list(50, 70, 85, 2))$samples
+  dat <- sample_vuln(n = 2, .func = "evaluator::select_loss_opportunities", params = list(tc = tc, diff = diff))
   expect_is(dat, "list")
   # ensure that mean_tc_exceedance is set correctly
   expect_equivalent(dat$details$mean_tc_exceedance, NA)
@@ -103,7 +129,8 @@ test_that("TC and DIFF exceedance handles NA threat events", {
 context("Sample LM")
 test_that("Sample LM", {
   set.seed(1234)
-  lm <- sample_lm(params = list(n=10, min=1*10^4, mode=5*10^4, max=1*10^7, shape=3))
+  lm <- sample_lm(n = 10, params = list(min = 1*10^4, mode = 5*10^4,
+                                max = 1*10^7, shape = 3))
   expect_is(lm, "list")
   # ensure that the list has the required elements
   expect_equal(names(lm), c("type", "samples", "details"))
@@ -118,7 +145,8 @@ test_that("Sample LM", {
 })
 test_that("Non-standard distributions work as expected", {
   set.seed(1234)
-  lm <- sample_lm(func = "EnvStats::rlnormTrunc", list(n = 10, meanlog = 1, sdlog = 2, min = 1, max = 2))
+  lm <- sample_lm(.func = "EnvStats::rlnormTrunc", n = 10,
+                  params = list(meanlog = 1, sdlog = 2, min = 1, max = 2))
   expect_is(lm, "list")
   # ensure that the list has the required elements
   expect_equal(names(lm), c("type", "samples", "details"))
@@ -134,9 +162,9 @@ test_that("Non-standard distributions work as expected", {
 context("Sample LEF")
 test_that("Sample LEF works with composition function", {
   set.seed(1234)
-  tef <- sample_tef(params = list(n=10, 1, 10, 20))
-  vuln <- sample_vuln(params = list(n=10, 1, .6))
-  dat <- sample_lef(func = "evaluator::compare_tef_vuln",
+  tef <- sample_tef(n = 10, params = list(1, 10, 20))
+  vuln <- sample_vuln(n = 10, params = list(1, .6))
+  dat <- sample_lef(n = 10, .func = "evaluator::compare_tef_vuln",
              params = list(tef = tef$samples, vuln = vuln$samples))
   expect_is(dat, "list")
   # ensure that the list has the required elements
@@ -149,42 +177,52 @@ test_that("Sample LEF works with composition function", {
   expect_equal(dat$samples, c(5, 11, 15, 2, 12, 0, 8, 0, 0, 6))
 })
 
-context("Standard simulation model")
+# Model Tests -------------------------------------------------------------
+
+context("LM simulation model")
 test_that("Default simulation model returns expected results", {
-  sim <- openfair_tef_tc_diff_lm(list(
-    tef_params=list(list(func = "mc2d::rpert", min = 1, mode = 10, max=100, shape=4)),
-    tc_params=list(list(func = "mc2d::rpert", min = 1, mode = 10, max =75, shape=100)),
-    lm_params=list(list(func = "mc2d::rpert", min = 1, mode = 100, max = 10000, shape=54)),
-    diff_params=list(list(list(func = "mc2d::rpert", min = 1, mode = 10, max = 50, shape = 4)))),
-    n = 100)
-  expect_s3_class(sim, "tbl_df")
-  expect_equal(nrow(sim), 100)
-  expect_equal(length(sim), 12)
-  expect_equal(sum(sim$threat_events), 2287)
-  expect_equal(sum(sim$loss_events), 786)
+  scen <- tidyrisk_scenario(
+    tef_params = list(func = "mc2d::rpert", min = 1, mode = 10, max = 100, shape = 4),
+    tc_params = list(func = "mc2d::rpert", min = 1, mode = 10, max = 75, shape = 100),
+    lm_params = list(func = "mc2d::rpert", min = 1, mode = 100, max = 10000, shape = 54),
+    diff_params = list(list(func = "mc2d::rpert", min = 1, mode = 10, max = 50, shape = 4)))
+  results <- run_simulation(scen, iterations = 100)
+  expect_s3_class(results, "tbl_df")
+  expect_equal(nrow(results), 100)
+  expect_equal(length(results), 11)
+  expect_equal(sum(results$threat_events), 2287)
+  expect_equal(sum(results$loss_events), 786)
 })
 
-context("Main simulation")
-test_that("Full wrapped scenario works as expected", {
-  scenario <-structure(list(scenario_id = "1", scenario = "Inadequate human resources are available to execute the informaton security strategic security plan.",
-                            tcomm = "Organizational Leadership", domain_id = "ORG",
-                            controls = "1, 5, 7, 32, 14, 15, 16",
-                            diff_params = list(list(list(func = "mc2d::rpert", min = 70L, mode = 85L, max = 98L, shape = 4L),
-                                                    list(func = "mc2d::rpert", min = 50L, mode = 70L, max = 84L, shape = 4L),
-                                                    list(func = "mc2d::rpert", min = 0L,  mode = 10L, max = 30L, shape = 4L),
-                                                    list(func = "mc2d::rpert", min = 50L, mode = 70L, max = 84L, shape = 4L),
-                                                    list(func = "mc2d::rpert", min = 20L, mode = 30L, max = 50L, shape = 4L),
-                                                    list(func = "mc2d::rpert", min = 20L, mode = 30L, max = 50L, shape = 4L),
-                                                    list(func = "mc2d::rpert", min = 50L, mode = 70L, max = 84L, shape = 4L))),
-                            tef_params = list(list(func = "mc2d::rpert",min  = 10L, mode = 24, max = 52L, shape = 4L)),
-                            tc_params = list(list(func = "mc2d::rpert", min = 33L, mode = 50, max = 60L, shape = 3L)),
-                            lm_params = list(list(func = "mc2d::rpert", min = 10000L, mode = 20000, max = 500000L, shape = 4L))), row.names = c(NA, -1L),
-                       class = c("tbl_df", "tbl", "data.frame"))
-  results <- evaluate_promise(run_simulations(scenario, 100L))
-  expect_s3_class(results$result, "tbl_df")
-  expect_equal(nrow(results$result), 100)
-  expect_equal(length(results$result), 13)
-  expect_equal(sum(results$result$threat_events), 2686)
-  #$expect_equal(sum(results$result$loss_events), 764)
-  expect_equal(sum(results$result$loss_events), 772)
+context("PLM-SR simulation model")
+test_that("SR model works as expected", {
+  scenario <- structure(list(scenario_id = "1",
+                             scenario = "Inadequate human resources are available to execute the informaton security strategic security plan.",
+                             tcomm = "Organizational Leadership", domain_id = "ORG",
+                             controls = "1, 5, 7, 32, 14, 15, 16",
+                             diff_params = list(list(list(func = "mc2d::rpert", min = 70L, mode = 85L, max = 98L, shape = 4L),
+                                                     list(func = "mc2d::rpert", min = 50L, mode = 70L, max = 84L, shape = 4L),
+                                                     list(func = "mc2d::rpert", min = 0L,  mode = 10L, max = 30L, shape = 4L),
+                                                     list(func = "mc2d::rpert", min = 50L, mode = 70L, max = 84L, shape = 4L),
+                                                     list(func = "mc2d::rpert", min = 20L, mode = 30L, max = 50L, shape = 4L),
+                                                     list(func = "mc2d::rpert", min = 20L, mode = 30L, max = 50L, shape = 4L),
+                                                     list(func = "mc2d::rpert", min = 50L, mode = 70L, max = 84L, shape = 4L))),
+                             tef_params = list(list(func = "mc2d::rpert", min  = 10L, mode = 24, max = 52L, shape = 4L)),
+                             tc_params = list(list(func = "mc2d::rpert", min = 33L, mode = 50, max = 60L, shape = 3L)),
+                             plm_params = list(list(func = "mc2d::rpert", min = 10000L, mode = 20000, max = 500000L, shape = 4L)),
+                             sr_params = list(list(func = "mc2d::rpert", min = 10000L, mode = 20000, max = 500000L, shape = 4L)),
+                             model = "openfair_tef_tc_diff_plm_sr"), row.names = c(NA, -1L),
+                        class = c("tbl_df", "tbl", "data.frame"))
+  scenario <- scenario %>%
+    mutate(scenario = pmap(list(tef_params = tef_params, tc_params = tc_params,
+                                diff_params = diff_params, plm_params = plm_params,
+                                sr_params = sr_params, model = model), tidyrisk_scenario))
+  results <- run_simulation(scenario[[1, "scenario"]], 100L)
+  expect_s3_class(results, "tbl_df")
+  expect_equal(nrow(results), 100)
+  expect_equal(length(results), 11)
+  expect_equal(sum(results$threat_events), 2686)
+  expect_equivalent(stats::quantile(results$ale, 0.95), 2792183, tolerance = 0.1)
+  expect_equal(sum(results$loss_events), 772)
 })
+

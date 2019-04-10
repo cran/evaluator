@@ -18,6 +18,14 @@ by the 95% VaR. This plot displays the domains in which aggregreate risk is
 greater than others.
 }
 \examples{
-data(domain_summary)
-generate_heatmap(domain_summary)
+data(mc_domain_summary)
+generate_heatmap(mc_domain_summary)
 }
+\seealso{
+Other result graphs: \code{\link{exposure_histogram}},
+  \code{\link{generate_event_outcomes_plot}},
+  \code{\link{generate_scatterplot-deprecated}},
+  \code{\link{loss_exceedance_curve}},
+  \code{\link{loss_scatterplot}}
+}
+\concept{result graphs}

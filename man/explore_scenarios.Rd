@@ -17,9 +17,9 @@ explore_scenarios(input_directory = "~/evaluator/inputs",
 
 \item{intermediates_dir}{Location for intermediate knit files.}
 
-\item{quiet}{TRUE to suppress printing of pandoc output.}
+\item{quiet}{\code{TRUE} to suppress printing of pandoc output.}
 
-\item{...}{Any other parameters to pass straight to \code{rmarkdown::run}.}
+\item{...}{Any other parameters to pass to \code{rmarkdown::run}.}
 }
 \value{
 Invisible NULL.

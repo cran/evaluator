@@ -15,11 +15,13 @@
 #' @param results_directory Location of simulation results.
 #' @param output_file Full path to output file.
 #' @param styles Optional full path to CSS file to override default styles.
+#' @param include_header Optional full path to HTML to include in the HEAD section (HTML formats only).
 #' @param focus_scenario_ids IDs of scenarios of special interest.
 #' @param format Format to generate (html, pdf, word).
 #' @param intermediates_dir Location for intermediate knit files.
-#' @param quiet TRUE to suppress printing of pandoc output.
+#' @param quiet `TRUE` to suppress printing of pandoc output.
 #' @param ... Any other parameters to pass straight to \code{rmarkdown::render}.
+#'
 #' @return Default return values of the \code{rmarkdown::render} function.
 #' @export
 #' @examples
@@ -30,12 +32,13 @@ generate_report <- function(input_directory = "~/evaluator/inputs",
                             results_directory = "~/evaluator/results",
                             output_file,
                             styles = NULL,
-                            focus_scenario_ids = c(51, 12),
+                            include_header = NULL,
+                            focus_scenario_ids = c("RS-51", "RS-12"),
                             format = "html",
                             intermediates_dir = tempdir(),
                             quiet = TRUE,
                             ...) {
-  check_availability(packages = c("psych", "pander", "purrrlyr", "ggalt", "rmarkdown"),
+  check_availability(packages = c("psych", "pander", "ggalt", "rmarkdown"),
                      func = "generate_report")
 
   # figure out the correct style format to apply
@@ -43,8 +46,16 @@ generate_report <- function(input_directory = "~/evaluator/inputs",
     if (format == "html") system.file("rmd", "styles", "html-styles.css", package = "evaluator")
   } else {styles}
 
+  # build header includes, if needed
+  includes_content <- if (is.null(include_header)) {
+    if (format == "html") {
+      includes_file <- system.file("rmd", "styles", "open-sans-import.html", package = "evaluator")
+      rmarkdown::includes(in_header = includes_file)
+    }
+  } else {rmarkdown::includes(in_header = include_header)}
+
   # select the appropriate renderer
-  out_format <- rmarkdown::html_document(css = styles)
+  out_format <- rmarkdown::html_document(css = styles, includes = include_header)
   out_format <- if (format == "pdf") {
     rmarkdown::pdf_document()} else {
       if (format == "word") {
@@ -75,8 +86,9 @@ generate_report <- function(input_directory = "~/evaluator/inputs",
 #' @param results_directory Location of simulation results.
 #' @param styles Optional full path to CSS file to override default styles.
 #' @param intermediates_dir Location for intermediate knit files.
-#' @param quiet TRUE to suppress printing of pandoc output.
-#' @param ... Any other parameters to pass straight to \code{rmarkdown::run}.
+#' @param quiet `TRUE` to suppress printing of pandoc output.
+#' @param ... Any other parameters to pass to \code{rmarkdown::run}.
+#'
 #' @import dplyr
 #' @import ggplot2
 #' @return Invisible NULL.
@@ -98,7 +110,7 @@ explore_scenarios <- function(input_directory = "~/evaluator/inputs",
   if (is.null(styles)) {
     styles <- system.file("rmd", "styles", "html-styles.css", package = "evaluator")
   }
-  icon <- system.file("rmd", "img", "evaluator_logo_48px.png", package = "evaluator")
+  icon <- system.file("rmd", "img", "evaluator_hex_48px.png", package = "evaluator")
 
   rmarkdown::run(system.file("explore_scenarios", "explore_scenarios.Rmd", package = "evaluator"),
                  #dir = file.path(basename(system.file("rmd", "explore_scenarios.Rmd", package = "evaluator")), ".."),
@@ -121,7 +133,8 @@ explore_scenarios <- function(input_directory = "~/evaluator/inputs",
 #'   application, only TEF+TC+DIFF+LM parameters may be entered.
 #'
 #' @param intermediates_dir Location for intermediate knit files.
-#' @param quiet TRUE to suppress printing of pandoc output.
+#' @param quiet `TRUE` to suppress printing of pandoc output.
+#'
 #' @return Invisible NULL
 #' @export
 #' @examples
@@ -134,7 +147,7 @@ openfair_example <- function(intermediates_dir = tempdir(),
                      func = "openfair_example")
 
   styles <- system.file("rmd", "styles", "html-styles.css", package = "evaluator")
-  icon <- system.file("rmd", "img", "evaluator_logo_48px.png", package = "evaluator")
+  icon <- system.file("rmd", "img", "evaluator_hex_48px.png", package = "evaluator")
 
   rmarkdown::run(system.file("openfair_example", "openfair_example.Rmd",
                              package = "evaluator"),
@@ -155,12 +168,13 @@ openfair_example <- function(intermediates_dir = tempdir(),
 #'   Intended as a skeleton showing how the results could be displayed at an
 #'   executive level.
 #'
-#' @param input_directory Location of input files
-#' @param results_directory Location of simulation results
+#' @param input_directory Location of input files.
+#' @param results_directory Location of simulation results.
 #' @param output_file Full path to the desired output file.
 #' @param intermediates_dir Location for intermediate knit files.
-#' @param quiet TRUE to suppress printing of pandoc output.
-#' @param ... Any other parameters to pass straight to \code{rmarkdown::render}
+#' @param quiet `TRUE` to suppress printing of pandoc output.
+#' @param ... Any other parameters to pass to \code{rmarkdown::render}
+#'
 #' @return Default return values of the \code{rmarkdown::render} function.
 #' @export
 #' @examples
@@ -177,7 +191,7 @@ risk_dashboard <- function(input_directory = "~/evaluator/inputs",
                      func = "risk_dashboard")
 
   styles <- system.file("rmd", "styles", "html-styles.css", package = "evaluator")
-  icon <- system.file("rmd", "img", "evaluator_logo_48px.png", package = "evaluator")
+  icon <- system.file("rmd", "img", "evaluator_hex_48px.png", package = "evaluator")
 
   rmarkdown::render(system.file("rmd", "risk_dashboard.Rmd", package = "evaluator"),
                     output_options =  list(css = styles, favicon = icon, logo = icon),

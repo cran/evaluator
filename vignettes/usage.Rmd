@@ -145,14 +145,13 @@ Evaluator puts each scenario through 10,000 individual simulated years,
 modeling how often the threat actors come into contact with your assets,
 the strength of the threat actors, the strength of your controls, and the 
 losses involved in any situation where the threat strength exceeds your 
-control strength. This simulation process is computationally intense. 
-The sample data takes approximately 24 minutes to run on a 2016 MacBook Pro. 
-A progress bar is displayed on the console while running.
+control strength. This simulation process is computationally intense and can 
+take some time to run. 
 
 ```{r simulate, eval = FALSE}
 simulation_results <- run_simulations(quantitative_scenarios, 
-                                      simulation_count = 100L)
-save(simulation_results, file = "~/evaluator/results/simulation_results.rda")
+                                      iterations = 100L)
+saveRDS(simulation_results, file = "~/evaluator/results/simulation_results.rds")
 ```
 
 ## Summarize Results
@@ -163,11 +162,11 @@ per scenario and per domain level are in addition to the previously generated
 full results. An analyst can always access the full simulation results if 
 desired.
 
-In the following code block, Evaluator produces `scenario_summary.rda` and 
-`domain_summary.rda` files for the reporting in the final section.
+In the following code block, Evaluator produces `scenario_summary.rds` and 
+`domain_summary.rds` files for the reporting in the final section.
 
 ```{r summarize, eval=FALSE}
-summarize_to_disk(simulation_results = simulation_results, domains = domains, 
+summarize_to_disk(simulation_results = simulation_results, 
                   results_dir = "~/evaluator/results")
 ```
 
@@ -193,24 +192,27 @@ intelligence program such as Tableau:
 ```{r data_files, eval = TRUE, echo=FALSE}
 tibble::tribble(
     ~"Data File", ~Purpose,
-    "simulation_results.rda", "Full details of each simulated scenario",
-    "scenario_summary.rda", "Simulation results, summarized at the scenario level",
-    "domain_summary.rda", "Simulation results, summarized at the domain level"
+    "simulation_results.rds", "Full details of each simulated scenario",
+    "scenario_summary.rds", "Simulation results, summarized at the scenario level",
+    "domain_summary.rds", "Simulation results, summarized at the domain level"
 ) %>% pander::pander(., justify = "left")
 ```
 
 ```{r analyze, eval=FALSE}
 # Explorer
-explore_scenarios("~/evaluator/inputs", "~/evaluator/results")
+explore_scenarios(input_directory = "~/evaluator/inputs", 
+                  results_directory = "~/evaluator/results")
 
 # Risk Dashboard
-risk_dashboard("~/evaluator/inputs", "~/evaluator/results", 
+risk_dashboard(input_directory = "~/evaluator/inputs", 
+               output_directory = "~/evaluator/results", 
                "~/evaluator/risk_dashboard.html")
 
 # Sample Report
-generate_report("~/evaluator/inputs", "~/evaluator/results", 
+generate_report(input_directory = "~/evaluator/inputs", 
+                results_directory = "~/evaluator/results", 
                 "~/evaluator/risk_report.html") %>% rstudioapi::viewer()
 ```
 
 To view that same report as a Word document for editing, use 
-`generate_report("~/evaluator/inputs", "~/evaluator/results", "~/evaluator/risk_report.docx", format = "word")`.
+`generate_report(input_directory = "~/evaluator/inputs", results_directory = "~/evaluator/results", "~/evaluator/risk_report.docx", format = "word")`.

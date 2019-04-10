@@ -7,7 +7,7 @@
 get_mean_control_strength(n, diff_parameters)
 }
 \arguments{
-\item{n}{Number of threat events to sample controls across.}
+\item{n}{Number of threat events to generate control effectiveness samples.}
 
 \item{diff_parameters}{Parameters to pass to \code{\link{sample_diff}}.}
 }
@@ -23,7 +23,7 @@ Other OpenFAIR helpers: \code{\link{compare_tef_vuln}},
   \code{\link{openfair_tef_tc_diff_lm}},
   \code{\link{sample_diff}}, \code{\link{sample_lef}},
   \code{\link{sample_lm}}, \code{\link{sample_tc}},
-  \code{\link{sample_tef}}, \code{\link{sample_vuln}},
+  \code{\link{sample_vuln}},
   \code{\link{select_loss_opportunities}}
 }
 \concept{OpenFAIR helpers}

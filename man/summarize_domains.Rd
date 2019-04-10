@@ -4,13 +4,15 @@
 \alias{summarize_domains}
 \title{Create domain-level summary of simulation results}
 \usage{
-summarize_domains(simulation_results)
+summarize_domains(simulation_results, domain_variable = "domain_id")
 }
 \arguments{
 \item{simulation_results}{Simulation results dataframe.}
+
+\item{domain_variable}{Variable by which individual simulations should be grouped.}
 }
 \value{
-Simulation results summarized by domain
+Simulation results summarized across domains.
 }
 \description{
 Given a dataframe of raw results from \code{\link{run_simulations}}, summarize
@@ -26,12 +28,11 @@ Summary stats created include:
 \item Mean percentage of threat capability exceeding difficulty on successful threat events
 \item Mean percentage of difficulty exceeding threat capability on defended events
 \item Vulnerability percentage
-\item Z-score of ALE (outliers flagged as 2 >= z-score)
 }
 }
 \examples{
 \dontrun{
-data(simulation_results)
-summarize_domains(simulation_results)
+data(mc_simulation_results)
+summarize_domains(mc_simulation_results)
 }
 }

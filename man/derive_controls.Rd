@@ -14,7 +14,7 @@ derive_controls(capability_ids, capabilities, mappings)
 \item{mappings}{Qualitative mappings dataframe.}
 }
 \value{
-A dataframe of quantitative estimate parameters for the capabilities
+A named list of quantitative estimate parameters for the capabilities
 applicable to a given scenario.
 }
 \description{
@@ -24,9 +24,9 @@ their quantitative parameters, and return a dataframe of the set of
 parameters.
 }
 \examples{
-data(capabilities)
+data(mc_capabilities)
 capability_ids <- c("1, 3")
 mappings <- data.frame(type = "diff", label = "1 - Immature", l = 0, ml = 2, h = 10,
                        conf = 3, stringsAsFactors = FALSE)
-derive_controls(capability_ids, capabilities, mappings)
+derive_controls(capability_ids, mc_capabilities, mappings)
 }
