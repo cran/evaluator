@@ -1,3 +1,13 @@
+# evaluator 0.4.1
+
+* Update for compatibility with `vctrs` 0.2.0 CRAN release.
+* `summarize_to_disk()` and `create_templates()` no longer default to the 
+  user's home directory for writing to disk. A path to place the generated 
+  files must be provided.
+* General documentation improvements. Clarifying language and correcting 
+  formatting.
+* Removed inadvertent dependency on R 3.5 `tempdir()` syntax.
+
 # evaluator 0.4.0
 
 This release includes a greatly improved flow when starting directly from 
@@ -17,7 +27,7 @@ work with their quantitative data.
   - `summarize_scenarios()` is now a wrapper around `summarize_scenario()`
 * An alternative model `openfair_tef_tc_diff_plm_sr()` is now available for 
   simulating scenarios with secondary loss risk.
-* `loss_scatterplot()` generates a scatterplot of total loss exposure vs. 
+* `loss_scatterplot()` generates a scatter plot of total loss exposure vs. 
   number of loss events for a single scenario.
 * `exposure_histogram()` generates a histogram of losses for a single scenario, 
   optionally displaying the 95% value at risk level.
