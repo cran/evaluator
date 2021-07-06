@@ -1,3 +1,9 @@
+# evaluator 0.4.3 (unreleased)
+
+* Internal updates for deprecated `readr` options.
+* Internal shift to roxygen 7.1.1.
+* `markdown` now a suggested package for vignette building.
+
 # evaluator 0.4.2
 
 * Internal updates for recent `tibble` and `tidyr` changes.
@@ -11,6 +17,10 @@
 * General documentation improvements. Clarifying language and correcting 
   formatting.
 * Removed inadvertent dependency on R 3.5 `tempdir()` syntax.
+
+* `openfair_example()` did not check for the presence of the DT package. Fixed.
+* `check_availability()` error message reported for all checked packages, rather 
+  than reporting on just the packages that are missing.
 
 # evaluator 0.4.0
 

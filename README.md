@@ -5,33 +5,30 @@
 
 <!-- badges: start -->
 
-[![Build
-Status](https://travis-ci.org/davidski/evaluator.svg?branch=master)](https://travis-ci.org/davidski/evaluator)
-[![AppVeyor Build
-Status](https://ci.appveyor.com/api/projects/status/github/davidski/evaluator?branch=master&svg=true)](https://ci.appveyor.com/project/davidski/evaluator)
+[![R build
+status](https://github.com/davidski/evaluator/workflows/R-CMD-check/badge.svg)](https://github.com/davidski/evaluator/actions)
 [![Coverage
 Status](https://codecov.io/gh/davidski/evaluator/branch/master/graph/badge.svg)](https://codecov.io/github/davidski/evaluator?branch=master)
-[![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/evaluator)](https://cran.r-project.org/package=evaluator)
+[![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/evaluator)](https://cran.r-project.org/package=evaluator)
 ![downloads](https://cranlogs.r-pkg.org/badges/grand-total/evaluator)
 <!-- badges: end -->
 
 ## Overview
 
 evaluator is an open source quantitative risk analysis toolkit. Based on
-the OpenFAIR [ontology](https://www2.opengroup.org/ogsys/catalog/C13K)
-and risk assessment
-[standard](https://www2.opengroup.org/ogsys/catalog/C13G), evaluator
-empowers an organization to perform a quantifiable, repeatable, and
-data-driven risk review.
+the OpenFAIR [ontology](https://publications.opengroup.org/c20b) and
+risk analysis [standard](https://publications.opengroup.org/c20a),
+evaluator empowers an organization to perform a quantifiable,
+repeatable, and data-driven risk review.
 
 Three sample outputs of this toolkit are available:
 
-1)  A [sample risk
+1.  A [sample risk
     analysis](https://evaluator.tidyrisk.org/reports/evaluator_risk_analysis.html)
     report
-2)  A one page [risk
+2.  A one page [risk
     dashboard](https://evaluator.tidyrisk.org/reports/evaluator_risk_dashboard.html)
-3)  A demonstration copy of [Scenario
+3.  A demonstration copy of [Scenario
     Explorer](https://davidski.shinyapps.io/scenario_explorer)
 
 ## Installation
@@ -86,38 +83,38 @@ While evaluator is a powerful tool, it does not attempt to address
 interactions between risk scenarios, rolling up multiple levels of risk
 into aggregations, or other advanced topics. As you become more
 comfortable with quantitative risk analysis, you may wish to dive deeper
-into these areas (and I hope you do\!). The following resources may help
+into these areas (and I hope you do!). The following resources may help
 you explore these and other topics in risk management.
 
 ### Alternative Software
 
-  - [RiskLens](http://www.risklens.com/), a commercial analysis suite,
+-   [RiskLens](https://www.risklens.com), a commercial analysis suite,
     founded by the original creator of the FAIR methodology
-  - [FAIR Tool](https://github.com/zugo01/FAIRTool), a Shiny and R based
+-   [FAIR Tool](https://github.com/zugo01/FAIRTool), a Shiny and R based
     two scenario simulator, authored by Ezeugo Aguta under an MIT
     license
-  - [FAIR-U](https://www.fairinstitute.org/fair-u), a free educational
+-   [FAIR-U](https://www.fairinstitute.org/fair-u), a free educational
     tool for learning FAIR analysis, powered by RiskLens
-  - [Open FAIR Risk Analysis
+-   [Open FAIR Risk Analysis
     Tool](https://publications.opengroup.org/i181), an Excel and SIPMath
     base tool with a limited open license
 
 ### Blogs/Books/Training
 
-  - Russell C. Thomas’s excellent and provocative blog post on systemic
+-   Russell C. Thomas’s excellent and provocative blog post on systemic
     [Risk
-    Management](http://exploringpossibilityspace.blogspot.com/2013/08/risk-management-out-with-old-in-with-new.html)
-  - [Measuring and Managing Information
+    Management](https://exploringpossibilityspace.blogspot.com/2013/08/risk-management-out-with-old-in-with-new.html)
+-   [Measuring and Managing Information
     Risk](https://smile.amazon.com/gp/product/0124202314)
-  - [OpenFAIR
-    certification](http://www.opengroup.org/certifications/openfair)
-  - [Hubbard Decision Research calibration
-    training](https://www.hubbardresearch.com/training/)
+-   [OpenFAIR
+    certification](https://www.opengroup.org/certifications/openfair)
+-   [Hubbard Decision Research calibration
+    training](https://hubbardresearch.com/training/)
 
 ### Associations
 
-  - [FAIR Institute](http://www.fairinstitute.org/)
-  - [Society of Information Risk Analysts
+-   [FAIR Institute](https://www.fairinstitute.org)
+-   [Society of Information Risk Analysts
     (SIRA)](https://www.societyinforisk.org/)
 
 ## Contributing
